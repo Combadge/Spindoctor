@@ -1,0 +1,29 @@
+{
+  "name": "spindoctor",
+  "version": "0.0.1",
+  "description": "An Open Source Combadge Server",
+  "keywords": [
+    "Communications Badge",
+    "Combadge",
+    "Voice Server",
+    "Voice Assistant",
+    "Voice Agent"
+  ],
+  "main": "combadged.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Combadge/Spindoctor.git"
+  },
+  "author": "Gray Marchiori-Simpson",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Combadge/Spindoctor/issues"
+  },
+  "homepage": "https://github.com/Combadge/Spindoctor#readme",
+  "dependencies": {
+    "alawmulaw": "^6.0.0"
+  }
+}
