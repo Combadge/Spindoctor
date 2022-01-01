@@ -74,6 +74,60 @@ const vbCommands = {
     "0007": "SetCallTarget"
 };
 
+
+// 0014 aeaeaeae0014000000000000000c0009ef07e007005d5265636f676e697a6572434d53746174653a20526563526573756c74733d41736b466f724e616d652c47726179204d61726368696f72692d53696d70736f6e2c20436f6e663d302e3635204772616d6d61723d73696e676c656e616d65
+// RecognizerCMState: RecResults=LogOut Conf=0.83 Grammar=mainmenu
+// 0014 aeaeaeae0014000000000000001e0009ef07e007 003f 5265636f676e697a6572434d53746174653a20526563526573756c74733d4c6f674f757420436f6e663d302e3833204772616d6d61723d6d61696e6d656e75
+// 0014 aeaeaeae001400000000000000160009ef07e00700075965734f724e6f
+// 0014 aeaeaeae001400000000000000950009ef07e007003f5265636f676e697a6572434d53746174653a20526563526573756c74733d4c6f674f757420436f6e663d302e3834204772616d6d61723d6d61696e6d656e75
+//Prompt: 
+const vprompts = [
+    "say_or_spell_your_first_and_last_name",
+    "good_morning",
+    "good afternoon",
+    "good_evening",
+    "PlayPrompt_prompt_completed",
+    "WhoIsThis_prompt_completed",
+    "logging_in_as",
+    "LogIn_prompt_completed",
+    "u-usernamegoeshere",
+    "bye",
+    "genie",
+    "MainMenu_prompt_completed",
+    "logging_out",
+    "AnnounceLogout_prompt_completed",
+    "Bye_prompt_completed",
+    "itys", // I think you said
+    "itys_to_log_out",
+    "itys_call",
+    "is_this_correct",
+    "ConfirmResult_prompt_completed",
+    "do_not_understand",
+    "try_again",
+    "beam_up",
+    "BeamMeUp_prompt_completed",
+    "help_initial",
+    "beep",
+    "AskForHelpCMState_prompt_completed",
+    "Help is available for call, broadcast, messages, volume, add to group, learn names and welcome tutorial.",
+    "welcome_welcome",
+    "welcome_confirm",
+    "welcome_explain_yes_or_no",
+    "welcome_dos_and_donts",
+    "welcome_cannot_understand",
+    "welcome_six_inches_from_chin",
+    "ExplainDosAndDonts_prompt_completed",
+    "welcome_can_do_more_than_make_calls",
+    "welcome_just_give_me_a_simple_voice_command",
+    "welcome_when_you_hear_that_prompt",
+    "cancelled_welcome",
+    "backoff_command",
+    "AskForCommandCMState_prompt_completed",
+    "backoff_call_user_or_group",
+    "telephony_server_not_started"
+
+];
+
 const audioProtocol = {
     RTP: "0400",
     vRTP: "0000"
@@ -193,6 +247,8 @@ class Combadge extends Communicator {
                 switch(packet.data.slice(-4)) {
                     case "0000":
                         if (this.inCallState) {
+                            this.incrementSerial();
+                            this.sendPromptText();
                             this.hangUp();
                             this.inCallState = false;
                             break;
@@ -201,6 +257,7 @@ class Combadge extends Communicator {
                             this.incrementSerial();
                             this.setBadgeAgentString();
                             this.inCallState = true;
+                            //this.serverSerial = this.badgeSerial;
                             break;
                         }
 
@@ -236,6 +293,24 @@ class Combadge extends Communicator {
         response.first = emptySetting;
         response.second = emptySetting;
         response.third = `000100010001${ipHexify(serverAddress.address)}${parseInt(serverPort).toString(16)}000100`; //because I have no idea what the rest does yet.
+    
+        this.sendCommandToBadge(response);
+    };
+
+    
+
+    /**
+     * Send agent prompt notification to badge
+     */
+     sendPromptText () {
+        var promptText = "Prompt: I_have_no_idea_why_I_do_this";
+        var promptString = unucify(promptText);
+        var response = {};
+        response.serial = this.serverSerial;
+        response.command = vCommands.TriggerBadgePrompt;
+        response.first = emptySetting;
+        response.second = emptySetting;
+        response.third = `${stringByteLength(promptString)}${promptString}`;
     
         this.sendCommandToBadge(response);
     };

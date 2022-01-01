@@ -12,10 +12,19 @@ The application is single-licenced under the Affero GPL v3.0, a copyleft licence
 
 ## Current State ##
 
-- If you manually configure a B3000 badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably: play a test tone by pressing the call button. The system may not work with "not-already-logged-in" badges, and currently does nothing else, including hanging up the call. Only way to shut it up is to pull the battery.
+- If you manually configure a B3000 badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably: mess around with three prototype agentd programs. The system may not work with "not-already-logged-in" badges, and currently does nothing else, including hanging up the call. Only way to shut it up is to pull the battery.
 - Also, pretty sure if you let the test tone play the whole way through, the server will crash - I never handled the "end of file" scenario.
 - The controller code should in theory handle multiple badges, but this is not tested, the agent does not handle that and there would be no point since they won't interact yet.
-- Only built and tested on Node 16.
+- Should work on Node 12, 14, 16? I've not been too brave.
+- Now requires AVX! THANKS, tflite. You'll run on a Pi 02, but not a brand new Atom or a Westmere Xeon... P.S. You can manually compile tflite, but blegh.
+
+v0.0.2 includes three different agentd programs.
+
+- agentd-record-5s literally just... records audio to disk in 8Khz 16bit PCM wav.
+- agentd-playtine plays the 8 minute tone. This is the same agentd from v0.0.1.
+- agentd - uses Coqui TTS (formerly DeepSpeech) to infer meaning from 5s of badge audio. You will need the "huge" acoustic and language models from Coqui. This has been tested on:
+  - Me doing an impersonation of a Queen's English voice saying "Hello. Doctor. Name. Continue. Yesterday. Tomorrow." It got most of it right. Don't try and dictate a book with this please.
+
 
 ## Immediate To-Do-List ##
 
@@ -23,7 +32,7 @@ The application is single-licenced under the Affero GPL v3.0, a copyleft licence
 - User concept and ability to log in and log out a badge, possibly using a scripted timer to start with.
 - Two-way audio that feeds to something useful.
 - Thread the voice agent, and trigger it from the Combadge protocol, so that it opens a new port for each new badge (at which point we should be able to handle multiple badges on the network)
-- Hook some kind of speech and NLP into the agent, to be able to recognise basic log in/out.
+- Hook some kind of NLP into the agent, to be able to recognise basic log in/out.
 - Convince someone to send me a free network-controllable bean-to-cup coffee machine so I can hook into its protocol.
 
 ## Intended feature set ##
@@ -49,7 +58,7 @@ It is hoped that someone with an interest in such things might use the Spin Doct
 
 ## Things we're not implementing ##
 
-- "Code Lavender". This is not meant to be used somewhere important. It's a toy project for nerds to play with disposed combadges.
+- "Code Lavender". This is not meant to be used somewhere important where meaningful conversations need be had. It's a toy project for nerds to play with disposed combadges.
 - "Funny Genie". I'd rather hook in to productive things than make transporter sounds.
 - "Firmware update". Currently the OEM only distributes the badge firmware with the proprietary server software, so there's no legal way for a Spindoctor user to obtain it. So, we're not even going to support it. What firmware you have, is the firmware you work with. If the OEM starts publishing firmware updates online, we will revisit this - but that seems unlikely.
 
