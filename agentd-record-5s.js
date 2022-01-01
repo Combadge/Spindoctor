@@ -19,6 +19,7 @@
 const dgram = require('dgram'); // RTP is UDP-based.
 const rtp = require('./Libraries/rtp.js');
 const alawmulaw = require('alawmulaw'); // mulaw is the codec.
+const fs = require('fs');
 const stt = require('stt');
 const waveResampler = require('wave-resampler');
 const wav = require('wav');
@@ -42,9 +43,9 @@ audioServer.on('listening', () => {
     console.log(`RTP server listening ${address.address}:${address.port}`);
 });
 
-
+/*
 const modelFile = "./model.tflite"
-const scorerFile = "./huge-vocabulary.scorer"
+const scorerFile = "./digits.scorer"
 
 console.error('Loading model from file %s', modelFile);
 let model = new stt.Model(modelFile);
@@ -53,37 +54,40 @@ console.error('Loaded model.');
 console.log(model.sampleRate());
 
 function Recognise (recSamples) {
-    console.log(recSamples.length);
+    recSamples = new Buffer.from(recSamples);
+    if (recSamples.length % 2) {
+        recSamples = recSamples.subarray(1);
+    }
     var wavSamples = alawmulaw.mulaw.decode(recSamples);
-    writer.write(new Buffer.from(wavSamples.buffer));
-    floatSamples=Float32Array.from(Float32Array.from(wavSamples).map(x=>x/0x8000));
-    var newSamples = waveResampler.resample(floatSamples, 8000, 16000); // RETURNS A FLOAT64 NOT AN INT16 READ THE DOCS
-    samples1616=Int16Array.from(newSamples.map(x => (x>0 ? x*0x7FFF : x*0x8000)));
-    var wav16buffer = new Buffer.from(samples1616.buffer);
-    writer.write(wav16buffer);
-    console.log(newSamples.length);
-    console.log("Result:", model.stt(wav16buffer));
-    writer.end();
+    var newSamples = waveResampler.resample(wavSamples, 8000, 16000); // RETURNS A FLOAT64 NOT AN INT16 READ THE DOCS
+    console.log(newSamples.length)
+    console.log("Result:", model.stt(newSamples));
     throw new Error();
-}
+}*/
 
 timer = 0
-samples = new Buffer.from([])
-
 var writer = new wav.FileWriter('badgeout.wav', {
-    sampleRate: 16000,
-    channels: 1,
-    bitDepth: 16
-});
+        sampleRate: 8000,
+        channels: 1,
+        bitDepth: 16
+    });
 
 recording = true;
 audioServer.on('message', (message, clientInfo) => {
     console.log(`Received datagram from badge at ${clientInfo.address}:${clientInfo.port}`);
+
     var muSamples = message.subarray(12);
-    samples = Buffer.concat([samples, muSamples]);
+    console.log("Converting: ", muSamples.length);
+    var wavSamples = alawmulaw.mulaw.decode(muSamples);
+
+    console.log("writing: ", wavSamples.length);
+    console.log(wavSamples.buffer);
+    writer.write(new Buffer.from(wavSamples.buffer));
 
     if (timer > 250) {
-        Recognise(samples);
+        writer.end();
+        throw new Error("Finished writing.")
     }
+
     timer += 1;
 });
