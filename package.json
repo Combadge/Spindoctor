@@ -26,6 +26,7 @@
   "dependencies": {
     "alawmulaw": "^6.0.0",
     "stt": "^1.1.0",
+    "tonegenerator": "^0.3.2",
     "wav": "^1.0.2",
     "wave-resampler": "^1.0.0"
   }
