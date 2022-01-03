@@ -23,82 +23,52 @@
  */
 
 
-const dgram = require('dgram'); // The CnC Protocol is UDP-based.
-const communicator = require('./Models/communicator.js');
+import dgram from 'dgram'; // The CnC Protocol is UDP-based.
+import { CombadgePacket, Combadge } from './Libraries/combadge-protocol/index.mjs';
 
 
-const interface = '10.98.2.30'; // The interface to listen on.
-const protocolIdent = "aeaeaeae"; // The ident string for the badge protocol.
+const netAddress = '10.98.2.30'; // The interface to listen on.
 const updatePort = 5555; // The port for the updater service.
 const controlPort = 5002; // The port for the command-and-control service.
-const rtpAudioPort = 5200; // The port for the RTP audio service.
-
-const commandProtocolValues = {
-    legacy: "0000",
-    smart: "0001"
-};
 
 
 const controlServer = dgram.createSocket('udp4');
-controlServer.bind(controlPort, interface);
+controlServer.bind(controlPort, netAddress);
 controlServer.on('listening', () => {
     const address = controlServer.address();
     console.log(`C&C server listening ${address.address}:${address.port}`);
 });
 
 const updateServer = dgram.createSocket('udp4');
-updateServer.bind(updatePort, interface);
+updateServer.bind(updatePort, netAddress);
 updateServer.on('listening', () => {
     const address = updateServer.address();
     console.log(`Updater server listening ${address.address}:${address.port}`);
 });
 
-
-/**
- * 
- * @param {*} badgeCall 
- * @returns 
- */
- function slicePacket (message) {
-    if (message.slice(0, 8) == protocolIdent) {
-        return {
-            command: message.slice(8, 12),
-            settingOne: message.slice(12, 16),
-            settingTwo: message.slice(16, 20),
-            serial: parseInt(message.slice(20, 28), 16),
-            MAC: message.slice(28, 40),
-            data: message.slice(40)
-        };
-    };
-    return undefined;
-};
-
-activeBadges = {};
+var activeBadges = {};
 
 /**
  * Handle the command and control protocol. Detect new badges to create Objects for
  * and pass traffic to existing badges based on MAC address.
  */
 controlServer.on('message', (message, clientInfo) => {
-    address = clientInfo.address; port = clientInfo.port;
-    packet = slicePacket(message.toString('hex'));
-
+    var address = clientInfo.address; var port = clientInfo.port;
+    var packet = CombadgePacket.from(message)
     if (packet == undefined) {
         console.log(`Received datagram from badge at ${address}:${port}. Ignoring faulty or incompatible packet.`);
         return false;
     };
-
     if (packet.MAC in activeBadges) {
         activeBadges[packet.MAC].packetSorter(packet);
     } else {
-        activeBadges[packet.MAC] = new communicator.Combadge(packet.MAC, address, port, packet, controlServer);
+        activeBadges[packet.MAC] = new Combadge(packet.MAC, address, port, packet, controlServer);
     };
-
 });
 
 /**
  * Receive and respond to updater requests from badges. We don't have the firmware (unless OEM decides to release it separate from the CVS)
- * so just tell them to chill out.
+ * so just tell them to chill out. Need to find an Ack for this.
  */
 updateServer.on('message', (message, clientInfo) => {
     console.log(`Received datagram from badge at ${clientInfo.address}:${clientInfo.port}`);

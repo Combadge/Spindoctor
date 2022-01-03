@@ -7,13 +7,12 @@ The application is single-licenced under the Affero GPL v3.0, a copyleft licence
 ## Instructions ##
 
 - Clone to a folder
-- run npm install to pull down alawmulaw
+- run npm install to pull down all dependencies
 - use node to run combadged.js and agentd.js.
 
 ## Current State ##
 
 - If you manually configure a B3000 badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably: mess around with three prototype agentd programs. The system may not work with "not-already-logged-in" badges, and currently does nothing else, including hanging up the call. Only way to shut it up is to pull the battery.
-- Also, pretty sure if you let the test tone play the whole way through, the server will crash - I never handled the "end of file" scenario.
 - The controller code should in theory handle multiple badges, but this is not tested, the agent does not handle that and there would be no point since they won't interact yet.
 - Should work on Node 12, 14, 16? I've not been too brave.
 - Now requires AVX! THANKS, tflite. You'll run on a Pi 02, but not a brand new Atom or a Westmere Xeon... P.S. You can manually compile tflite, but blegh.
@@ -21,17 +20,19 @@ The application is single-licenced under the Affero GPL v3.0, a copyleft licence
 v0.0.2 includes three different agentd programs.
 
 - agentd-record-5s literally just... records audio to disk in 8Khz 16bit PCM wav.
-- agentd-playtine plays the 8 minute tone. This is the same agentd from v0.0.1.
+- agentd-playtone plays a tone back to the badge over RTP. This is the same agentd from v0.0.1.
 - agentd - uses Coqui TTS (formerly DeepSpeech) to infer meaning from 5s of badge audio. You will need the "huge" acoustic and language models from Coqui. This has been tested on:
   - Me doing an impersonation of a Queen's English voice saying "Hello. Doctor. Name. Continue. Yesterday. Tomorrow." It got most of it right. Don't try and dictate a book with this please.
 
 
 ## Immediate To-Do-List ##
 
-- "Hang up" button.
-- User concept and ability to log in and log out a badge, possibly using a scripted timer to start with.
-- Two-way audio that feeds to something useful.
-- Thread the voice agent, and trigger it from the Combadge protocol, so that it opens a new port for each new badge (at which point we should be able to handle multiple badges on the network)
+- Continuous inferencing with silence detection.
+- TTS for responding to badge.
+- "Hang up" button and Server-Side hang up.
+- User concept and ability to log in and log out a badge.
+- Badge to Badge calling.
+- Thread the voice agent, and trigger it from the Combadge protocol, so that it opens a new port for each new badge (at which point we should be able to handle multiple badges on the network).
 - Hook some kind of NLP into the agent, to be able to recognise basic log in/out.
 - Convince someone to send me a free network-controllable bean-to-cup coffee machine so I can hook into its protocol.
 

@@ -1,0 +1,32 @@
+{
+    "name": "combadge-protocol",
+    "version": "0.0.1",
+    "type": "module",
+    "description": "An Open Source Library for interacting with Combadges.",
+    "keywords": [
+      "Communications Badge",
+      "Combadge",
+      "Combadge Protocol"
+    ],
+    "main": "index.mjs",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/Combadge/Spindoctor.git"
+    },
+    "author": {
+      "name" : "Gray",
+      "email" : "mo-g@spindoctor.dev",
+      "url" : "https://github.com/mo-g"
+    },
+    "license": "AGPL-3.0",
+    "bugs": {
+      "url": "https://github.com/Combadge/Spindoctor/issues"
+    },
+    "homepage": "https://github.com/Combadge/Spindoctor#readme",
+    "dependencies": {
+    }
+  }
+  
