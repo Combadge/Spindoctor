@@ -7,13 +7,12 @@ The application is single-licenced under the Affero GPL v3.0, a copyleft licence
 ## Instructions ##
 
 - Clone to a folder
-- run npm install to pull down alawmulaw
+- run npm install to pull down all dependencies
 - use node to run combadged.js and agentd.js.
 
 ## Current State ##
 
 - If you manually configure a B3000 badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably: mess around with three prototype agentd programs. The system may not work with "not-already-logged-in" badges, and currently does nothing else, including hanging up the call. Only way to shut it up is to pull the battery.
-- Also, pretty sure if you let the test tone play the whole way through, the server will crash - I never handled the "end of file" scenario.
 - The controller code should in theory handle multiple badges, but this is not tested, the agent does not handle that and there would be no point since they won't interact yet.
 - Should work on Node 12, 14, 16? I've not been too brave.
 - Now requires AVX! THANKS, tflite. You'll run on a Pi 02, but not a brand new Atom or a Westmere Xeon... P.S. You can manually compile tflite, but blegh.
