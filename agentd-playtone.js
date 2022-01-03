@@ -16,19 +16,15 @@
  */
 
 
-const dgram = require('dgram'); // RTP is UDP-based.
-const rtp = require('./Libraries/rtp.js');
-const alawmulaw = require('alawmulaw'); // mulaw is the codec.
-const tone = require('tonegenerator');
+import dgram from 'dgram'; // The CnC Protocol is UDP-based.
+//const rtp = require('./Libraries/rtp.js');
+import alawmulaw from 'alawmulaw'; // mulaw is the codec.
+import tone from 'tonegenerator';
 
-Object.defineProperty(Buffer.prototype, 'chunk', {
-    value: function(chunkSize) {
-        var that = this;
-        return Array(Math.ceil(that.length/chunkSize)).fill().map(function(_,i){
-            return that.slice(i*chunkSize,i*chunkSize+chunkSize);
-        });
-    }
-});
+
+const netAddress = '10.98.2.30'; // The interface to listen on.
+const rtpAudioPort = 5299; // The port for the RTP audio service.
+
 
 function generateSamples (oldSamples) {
     var newSamples = Int16Array.from(tone({ freq: 1701, lengthInSecs: 0.2, volume: tone.MAX_16 }));
@@ -54,22 +50,18 @@ function generateSamples (oldSamples) {
     return outSamples;
 };
 
-const interface = '10.98.2.30'; // The interface to listen on.
-const rtpAudioPort = 5299; // The port for the RTP audio service.
-
-
 
 const audioServer = dgram.createSocket('udp4');
-audioServer.bind(rtpAudioPort, interface);
+audioServer.bind(rtpAudioPort, netAddress);
 audioServer.on('listening', () => {
     const address = audioServer.address();
     console.log(`RTP server listening ${address.address}:${address.port}`);
 });
 
-const rhdr = "8000";
-var rtpSerial = 13;
-var rtpTimeStamp = 42; // 4 bytes, this is as good a starting number as any
-const ssrc = "00003827";
+const rtpHeader = "8000";
+var rtpSerial = 13; // 2 bytes, this is as good a starting number as any.
+var rtpTimeStamp = 42; // 4 bytes, this is as good a starting number as any.
+const ssrc = "00003827"; // Default used by the OEM Agent.
 var samples = new Array();
 
 audioServer.on('message', (message, clientInfo) => {
@@ -86,9 +78,9 @@ audioServer.on('message', (message, clientInfo) => {
 
     var muClip = alawmulaw.mulaw.encode(pcmClip)
     var serial = rtpSerial.toString(16).padStart(4,'0')
-    var timestamp = rtpTimeStamp.toString(16).padStart(8,'0')
+    var timeStamp = rtpTimeStamp.toString(16).padStart(8,'0')
 
-    var dgramConstruct = rhdr + serial + timestamp + ssrc;
+    var dgramConstruct = rtpHeader + serial + timeStamp + ssrc;
     var headerBuffer = new Buffer.from(dgramConstruct, 'hex')
 
     var completeBuffer = Buffer.concat([headerBuffer,muClip])

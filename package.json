@@ -1,6 +1,7 @@
 {
   "name": "spindoctor",
   "version": "0.0.2",
+  "type": "module",
   "description": "An Open Source Combadge Server",
   "keywords": [
     "Communications Badge",

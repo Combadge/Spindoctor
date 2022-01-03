@@ -20,17 +20,19 @@ The application is single-licenced under the Affero GPL v3.0, a copyleft licence
 v0.0.2 includes three different agentd programs.
 
 - agentd-record-5s literally just... records audio to disk in 8Khz 16bit PCM wav.
-- agentd-playtine plays the 8 minute tone. This is the same agentd from v0.0.1.
+- agentd-playtone plays a tone back to the badge over RTP. This is the same agentd from v0.0.1.
 - agentd - uses Coqui TTS (formerly DeepSpeech) to infer meaning from 5s of badge audio. You will need the "huge" acoustic and language models from Coqui. This has been tested on:
   - Me doing an impersonation of a Queen's English voice saying "Hello. Doctor. Name. Continue. Yesterday. Tomorrow." It got most of it right. Don't try and dictate a book with this please.
 
 
 ## Immediate To-Do-List ##
 
-- "Hang up" button.
-- User concept and ability to log in and log out a badge, possibly using a scripted timer to start with.
-- Two-way audio that feeds to something useful.
-- Thread the voice agent, and trigger it from the Combadge protocol, so that it opens a new port for each new badge (at which point we should be able to handle multiple badges on the network)
+- Continuous inferencing with silence detection.
+- TTS for responding to badge.
+- "Hang up" button and Server-Side hang up.
+- User concept and ability to log in and log out a badge.
+- Badge to Badge calling.
+- Thread the voice agent, and trigger it from the Combadge protocol, so that it opens a new port for each new badge (at which point we should be able to handle multiple badges on the network).
 - Hook some kind of NLP into the agent, to be able to recognise basic log in/out.
 - Convince someone to send me a free network-controllable bean-to-cup coffee machine so I can hook into its protocol.
 

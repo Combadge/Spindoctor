@@ -16,13 +16,15 @@
  */
 
 
-const dgram = require('dgram'); // RTP is UDP-based.
-const rtp = require('./Libraries/rtp.js');
-const alawmulaw = require('alawmulaw'); // mulaw is the codec.
-const fs = require('fs');
-const stt = require('stt');
-const waveResampler = require('wave-resampler');
-const wav = require('wav');
+import dgram from 'dgram'; // The CnC Protocol is UDP-based.
+//const rtp = require('./Libraries/rtp.js');
+import alawmulaw from 'alawmulaw'; // mulaw is the codec.
+import wav  from 'wav';
+
+
+const netAddress = '10.98.2.30'; // The interface to listen on.
+const rtpAudioPort = 5299; // The port for the RTP audio service.
+
 
 Object.defineProperty(Buffer.prototype, 'chunk', {
     value: function(chunkSize) {
@@ -33,51 +35,27 @@ Object.defineProperty(Buffer.prototype, 'chunk', {
     }
 });
 
-const interface = '10.98.2.30'; // The interface to listen on.
-const rtpAudioPort = 5299; // The port for the RTP audio service.
 
 const audioServer = dgram.createSocket('udp4');
-audioServer.bind(rtpAudioPort, interface);
+audioServer.bind(rtpAudioPort, netAddress);
 audioServer.on('listening', () => {
     const address = audioServer.address();
     console.log(`RTP server listening ${address.address}:${address.port}`);
 });
 
-/*
-const modelFile = "./model.tflite"
-const scorerFile = "./digits.scorer"
+var timer = 0;
+var recording = true;
 
-console.error('Loading model from file %s', modelFile);
-let model = new stt.Model(modelFile);
-model.enableExternalScorer(scorerFile);
-console.error('Loaded model.');
-console.log(model.sampleRate());
-
-function Recognise (recSamples) {
-    recSamples = new Buffer.from(recSamples);
-    if (recSamples.length % 2) {
-        recSamples = recSamples.subarray(1);
-    }
-    var wavSamples = alawmulaw.mulaw.decode(recSamples);
-    var newSamples = waveResampler.resample(wavSamples, 8000, 16000); // RETURNS A FLOAT64 NOT AN INT16 READ THE DOCS
-    console.log(newSamples.length)
-    console.log("Result:", model.stt(newSamples));
-    throw new Error();
-}*/
-
-timer = 0
 var writer = new wav.FileWriter('badgeout.wav', {
         sampleRate: 8000,
         channels: 1,
         bitDepth: 16
     });
 
-recording = true;
 audioServer.on('message', (message, clientInfo) => {
     console.log(`Received datagram from badge at ${clientInfo.address}:${clientInfo.port}`);
 
     var muSamples = message.subarray(12);
-    console.log("Converting: ", muSamples.length);
     var wavSamples = alawmulaw.mulaw.decode(muSamples);
 
     console.log("writing: ", wavSamples.length);
