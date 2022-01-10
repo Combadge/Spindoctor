@@ -86,6 +86,8 @@ const VozAudioProtocol = {
 const EmptySetting = "0000";
 const AgentName = "Computer";
 
+const VozBSSIDError = 18; // I have no idea why, but it adds 
+
 /**
  * Take a string of hex values and extract ASCII form.
  */
@@ -115,14 +117,29 @@ function ipDecToHex (address) {
 };
 
 function bufferToMacAddr (macBuffer) {
-    //return `${macBuffer[0].toString('hex')}:${macBuffer[1].toString('hex')}:${macBuffer[2].toString('hex')}:${macBuffer[3].toString('hex')}:${macBuffer[4].toString('hex')}:${macBuffer[5].toString('hex')}`;
-    return "00:00:00:00:00:00"; //CBA to fix RN.
-}
+    return macBuffer.toString('hex').match( /.{1,2}/g ).join( ':' );
+};
+
+function macAddrToBuffer (macAddress) {
+    return Buffer.from(macAddress.split(':').join(''), 'hex');
+};
+
+function bufferToBSSID (bssidBuffer) {
+    var bssidArray = bssidBuffer.toString('hex').match( /.{1,2}/g )
+    bssidArray[0] = ( parseInt(bssidArray[0], 16) - VozBSSIDError ).toString(16);
+    return bssidArray.join( ':' );
+};
+
+function bssidToBuffer (bssid) {
+    var bssidArray = bssid.split(':')
+    bssidArray[0] = ( parseInt(bssidArray[0], 16) + VozBSSIDError ).toString(16);
+    return Buffer.from(bssid.join(''), 'hex');
+};
 
 function stringByteLength (string) {
     var byteCount = string.length/2;
     return byteCount.toString(16).padStart(4,'0');
-}
+};
 
 
 /**
@@ -210,14 +227,18 @@ function stringByteLength (string) {
  * Cannot be compiled, only ever received from the badge, never sent to it.
  */
 class Ping extends CombadgePacket {
-    constructor(MAC, propertyVersion, firmwareVersion, packetData) {
+    constructor(MAC, {propertyVersion = EmptySetting, firmwareVersion = EmptySetting, packetData = {}} = {}) {
         super(MAC);
         this.propertyVersion = propertyVersion;
         this.firmwareVersion = firmwareVersion;
         this.options = packetData.options;
-        this.accessPoint = packetData.apMacAddr;
+        this.accessPoint = packetData.apBSSID;
         this.userName = packetData.userName;
         this.prettyName = packetData.prettyName;
+    };
+
+    summary() {
+        return `AP: ${this.accessPoint}, login: ${this.userName}, name: ${this.prettyName}`;
     };
 
     static from(structuredPacket) {
@@ -231,7 +252,7 @@ class Ping extends CombadgePacket {
         dataValues.firstValue = packetData.slice(0, 2);
         dataValues.options = packetData.slice(2, 6);
         var __spacer = packetData.slice(6, 7);
-        dataValues.apMacAddr = bufferToMacAddr(packetData.slice(7, 13));
+        dataValues.apBSSID = bufferToBSSID(packetData.slice(7, 13));
         var __spacer = packetData.slice(13, 14);
         packetData = packetData.slice(14);
 
@@ -254,7 +275,7 @@ class Ping extends CombadgePacket {
 
         dataValues.lastValue = packetData.slice(28);
 
-        var returnPacket = new Ping(MAC, propertyVersion, firmwareVersion, dataValues);
+        var returnPacket = new Ping(MAC, {propertyVersion: propertyVersion, firmwareVersion: firmwareVersion, packetData: dataValues});
         returnPacket.serial = packetSerial;
         return returnPacket;
     };
@@ -266,10 +287,18 @@ class Ping extends CombadgePacket {
 
 
 class Ack extends CombadgePacket {
-    constructor (MAC, sendTime = false, sendAudio = true) {
+    constructor (MAC, {sendTime = false, sendAudio = true} = {}) {
         super(MAC);
-        this.sendAudio = sendAudio;
         this.sendTime = sendTime;
+        this.sendAudio = sendAudio;
+    };
+
+    summary() {
+        if (this.sendTime) {
+            return `Sending Timestamp`;
+        } else {
+            return `Blank ACK`;
+        };
     };
 
     static from(structuredPacket) {
@@ -282,7 +311,6 @@ class Ack extends CombadgePacket {
         var returnPacket = new Ack(MAC);
         returnPacket.serial = packetSerial;
         return returnPacket;
-
     };
 
     compile() {
@@ -315,8 +343,12 @@ class Ack extends CombadgePacket {
  */
 
  class NewMessageA extends CombadgePacket {
-    constructor (MAC) {
+    constructor (MAC, {} = {}) {
         super(MAC);
+    };
+
+    summary() {
+        return `Packet design incomplete. No summary available.`;
     };
 
     compile() {
@@ -336,8 +368,12 @@ class Ack extends CombadgePacket {
  */
 
 class BadgeSettings extends CombadgePacket {
-    constructor (MAC) {
+    constructor (MAC, {} = {}) {
         super(MAC);
+    };
+
+    summary() {
+        return `Packet design incomplete. No summary available.`;
     };
 
     compile() {
@@ -352,11 +388,19 @@ class BadgeSettings extends CombadgePacket {
 };
 
 class CallPressed extends CombadgePacket {
-    constructor (MAC, propertyVersion, firmwareVersion, callState = false) {
+    constructor (MAC, {propertyVersion = EmptySetting, firmwareVersion = EmptySetting, callState = false} = {}) {
         super(MAC);
         this.propertyVersion = propertyVersion;
         this.firmwareVersion = firmwareVersion;
         this.callState = callState;
+    };
+
+    summary() {
+        if (this.callState) {
+            return `Dailing in progress.`;
+        } else {
+            return `Beginning Call`;
+        };
     };
 
     static from(structuredPacket) {
@@ -366,18 +410,22 @@ class CallPressed extends CombadgePacket {
         var firmwareVersion = parseInt(structuredPacket.secondSetting, 16);
         var callState = Boolean(structuredPacket.data.readUInt16BE());
 
-        var returnPacket = new CallPressed(MAC, propertyVersion, firmwareVersion, callState);
+        var returnPacket = new CallPressed(MAC, {propertyVersion: propertyVersion, firmwareVersion: firmwareVersion, callState: callState});
         returnPacket.serial = packetSerial;
         return returnPacket;
     };
 };
 
 class ErBits extends CombadgePacket {
-    constructor (MAC, propertyVersion, firmwareVersion, erbits) {
+    constructor (MAC, {propertyVersion = EmptySetting, firmwareVersion = EmptySetting, erbits = Buffer.from([])} = {}) {
         super(MAC);
         this.propertyVersion = propertyVersion;
         this.firmwareVersion = firmwareVersion;
         this.erbits = erbits;
+    };
+
+    summary() {
+        return `Packet design incomplete. No summary available.`;
     };
 
     static from(structuredPacket) {
@@ -387,7 +435,7 @@ class ErBits extends CombadgePacket {
         var firmwareVersion = parseInt(structuredPacket.secondSetting, 16);
         var erbits = structuredPacket.data.toString('hex');
 
-        var returnPacket = new ErBits(MAC, propertyVersion, firmwareVersion, erbits);
+        var returnPacket = new ErBits(MAC, {propertyVersion: propertyVersion, firmwareVersion: firmwareVersion, erbits: erbits});
         returnPacket.serial = packetSerial;
         return returnPacket;
     };
@@ -395,11 +443,15 @@ class ErBits extends CombadgePacket {
 
 
 class BadgeLogs extends CombadgePacket {
-    constructor (MAC, propertyVersion, firmwareVersion, badgeLogs) {
+    constructor (MAC, {propertyVersion = EmptySetting, firmwareVersion = EmptySetting, badgeLogs = Buffer.from([])} = {}) {
         super(MAC);
         this.propertyVersion = propertyVersion;
         this.firmwareVersion = firmwareVersion;
         this.badgeLogs = badgeLogs;
+    };
+
+    summary() {
+        return `Packet design incomplete. No summary available.`;
     };
 
     static from(structuredPacket) {
@@ -409,7 +461,7 @@ class BadgeLogs extends CombadgePacket {
         var firmwareVersion = parseInt(structuredPacket.secondSetting, 16);
         var badgeLogs = structuredPacket.data.toString('hex');
 
-        var returnPacket = new BadgeLogs(MAC, propertyVersion, firmwareVersion, badgeLogs);
+        var returnPacket = new BadgeLogs(MAC, {propertyVersion: propertyVersion, firmwareVersion: firmwareVersion, badgeLogs: badgeLogs});
         returnPacket.serial = packetSerial;
         return returnPacket;
     };
@@ -420,10 +472,13 @@ class BadgeLogs extends CombadgePacket {
  * the globally set Agent string.
  */
  class DisplayTarget extends CombadgePacket {
-    constructor (MAC, displayString = AgentName) {
+    constructor (MAC, {displayString = AgentName} = {}) {
         super(MAC);
         this.displayString = displayString;
-        var displayString = displayString.concat();
+    };
+
+    summary() {
+        return `Setting display to: ${this.displayString}`;
     };
 
     compile() {
@@ -446,11 +501,15 @@ class BadgeLogs extends CombadgePacket {
  * Send RTP connection details and trigger the badge to start a call.
 */
 class CallRTP extends CombadgePacket {
-    constructor (MAC, address, port) {
+    constructor (MAC, {address = "0.0.0.0", port=5299} = {}) {
         super(MAC);
         this.targetAddress = address;
         //This is where we need to spawn an RTP server thread.
         this.targetPort = port;
+    };
+
+    summary() {
+        return `Calling RTP host at ${this.targetAddress}:${this.targetPort}`;
     };
 
     compile() {
@@ -465,11 +524,16 @@ class CallRTP extends CombadgePacket {
 };  
 
 class HangUp extends CombadgePacket {
-    constructor () {
+    constructor (MAC, {} = {}) {
+        super(MAC);
         this.command = VozServerCommands.EndCall;
         this.firstSetting = EmptySetting;
         this.secondSetting = EmptySetting;
         this.data = EmptySetting;
+    };
+
+    summary() {
+        return `Packet design incomplete. No summary available.`;
     };
 
     compile() {
@@ -478,7 +542,8 @@ class HangUp extends CombadgePacket {
 };
 
 class LogIn extends CombadgePacket {
-    constructor (userName = "u-atestuser", prettyName = "Alex Testuser") {
+    constructor (MAC, {userName = "u-atestuser", prettyName = "Alex Testuser"} = {}) {
+        super(MAC);
         var userString = unucify(userName);
         var prettyString = unucify(prettyName);
 
@@ -488,6 +553,10 @@ class LogIn extends CombadgePacket {
         this.data = `${stringByteLength(userString)}${userString}${stringByteLength(prettyString)}${prettyString}`;
     };
 
+    summary() {
+        return `Packet design incomplete. No summary available.`;
+    };
+
     compile() {
         return super.compile(values);
     };
@@ -495,11 +564,16 @@ class LogIn extends CombadgePacket {
 
 
 class LogOut extends CombadgePacket {
-    constructor () {
+    constructor (MAC, {} = {}) {
+        super(MAC);
         this.command = VozServerCommands.UserLogOut;
         this.firstSetting = EmptySetting;
         this.secondSetting = EmptySetting;
         this.data = EmptySetting;
+    };
+
+    summary() {
+        return `Packet design incomplete. No summary available.`;
     };
 
     compile() {

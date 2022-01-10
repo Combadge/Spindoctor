@@ -1,6 +1,6 @@
 {
     "name": "combadge-protocol",
-    "version": "0.0.1",
+    "version": "0.0.4",
     "type": "module",
     "description": "An Open Source Library for interacting with Combadges.",
     "keywords": [

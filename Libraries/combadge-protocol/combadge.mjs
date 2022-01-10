@@ -97,13 +97,15 @@ class Combadge{
 
         this.badgeSerial = packet.serial;
         this.serverSerial = this.badgeSerial;
+
+        this.accessPoint = packet.accessPoint;
         
         this.userName = "u-afakeuser";
         this.prettyName = "Alex Fakeuser";
 
-        console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name}`);
+        console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet.summary()}`);
 
-        var timeAck = new packets.Ack(this.MAC, true);
+        var timeAck = new packets.Ack(this.MAC, {sendTime: true});
         timeAck.serial = this.serverSerial;
         this.sendCommandToBadge(timeAck);
 
@@ -113,19 +115,21 @@ class Combadge{
     };
     
     sendCommandToBadge(responsePacket) {
-        console.log(`${this.MAC} ${this.getUserPrettyName()}: TX [${responsePacket.serial}] ${responsePacket.constructor.name}`);
+        console.log(`${this.MAC} ${this.getUserPrettyName()}: TX [${responsePacket.serial}] ${responsePacket.constructor.name} ${responsePacket.summary()}`);
         var compiledPacket = responsePacket.compile();
         this.UDPServer.send(compiledPacket, this.sourceUDPPort, this.IP);
 
     };
 
     packetSorter(packet) {
-        console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name}`);
+        console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet.summary()}`);
         this.badgeSerial = packet.serial;
 
         switch(packet.constructor.name) {
 
             case "Ping":
+                this.accessPoint = packet.accessPoint;
+                
                 var blankAck = new packets.Ack(this.MAC);
                 blankAck.serial = this.badgeSerial;
                 this.sendCommandToBadge(blankAck);
@@ -163,7 +167,7 @@ class Combadge{
 
                         this.serverSerial += 1;
 
-                        var callAgent = new packets.CallRTP(this.MAC, this.UDPServer.address().address, 5299);
+                        var callAgent = new packets.CallRTP(this.MAC, {address: this.UDPServer.address().address, port: 5299});
                         callAgent.serial = this.serverSerial;
                         this.sendCommandToBadge(callAgent);
                         break;
