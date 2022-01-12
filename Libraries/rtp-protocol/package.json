@@ -1,12 +1,12 @@
 {
-    "name": "combadge-protocol",
-    "version": "0.0.4",
+    "name": "rtp-protocol",
+    "version": "0.0.2",
     "type": "module",
-    "description": "An implementation of an OEM Combadge control protocol for Spin Doctor",
+    "description": "An RTP Library for Spin Doctor",
     "keywords": [
-      "Communications Badge",
-      "Combadge",
-      "Combadge Protocol"
+      "rtp",
+      "combadge",
+      "rtp protocol"
     ],
     "main": "index.mjs",
     "scripts": {

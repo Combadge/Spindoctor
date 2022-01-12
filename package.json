@@ -1,6 +1,6 @@
 {
   "name": "spindoctor",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "description": "An Open Source Combadge Server",
   "keywords": [
@@ -33,6 +33,7 @@
     "stt": "^1.4.0",
     "tonegenerator": "^0.3.2",
     "wav": "^1.0.2",
-    "wave-resampler": "^1.0.0"
+    "wave-resampler": "^1.0.0",
+    "node-vad": "^1.1.4"
   }
 }
