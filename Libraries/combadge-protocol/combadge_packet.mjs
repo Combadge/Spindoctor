@@ -35,7 +35,7 @@ const VozServerCommands = {
     // Call Management
     SetBadgeDisplay: "000a", // compile
     TriggerBadgePrompt: "0014", // compile
-    EndCall: "0009", // compile
+    HangUp: "0009", // compile
     CallRTPTarget: "0007", // compile
     //Message Handling
     NewMessageA: "000b", // compile
@@ -397,7 +397,7 @@ class CallPressed extends CombadgePacket {
 
     summary() {
         if (this.callState) {
-            return `Dailing in progress.`;
+            return `Dialling in progress.`;
         } else {
             return `Beginning Call`;
         };
@@ -526,17 +526,19 @@ class CallRTP extends CombadgePacket {
 class HangUp extends CombadgePacket {
     constructor (MAC, {} = {}) {
         super(MAC);
-        this.command = VozServerCommands.EndCall;
-        this.firstSetting = EmptySetting;
-        this.secondSetting = EmptySetting;
-        this.data = EmptySetting;
     };
 
     summary() {
-        return `Packet design incomplete. No summary available.`;
+        return `Ending active call.`;
     };
 
     compile() {
+        var values = {
+            command: VozServerCommands.HangUp,
+            firstSetting: EmptySetting,
+            secondSetting: EmptySetting,
+            data: ""
+        }
         return super.compile(values);
     };
 };
@@ -544,13 +546,8 @@ class HangUp extends CombadgePacket {
 class LogIn extends CombadgePacket {
     constructor (MAC, {userName = "u-atestuser", prettyName = "Alex Testuser"} = {}) {
         super(MAC);
-        var userString = unucify(userName);
-        var prettyString = unucify(prettyName);
-
-        this.command = VozServerCommands.UserLogIn;
-        this.firstSetting = EmptySetting;
-        this.secondSetting = EmptySetting;
-        this.data = `${stringByteLength(userString)}${userString}${stringByteLength(prettyString)}${prettyString}`;
+        this.userString = unicodeToHex(userName);
+        this.prettyString = unicodeToHex (prettyName);
     };
 
     summary() {
@@ -558,6 +555,12 @@ class LogIn extends CombadgePacket {
     };
 
     compile() {
+        var values = {
+            command: VozServerCommands.UserLogIn,
+            firstSetting: EmptySetting,
+            secondSetting: EmptySetting,
+            data: `${stringByteLength(this.userString)}${this.userString}${stringByteLength(this.prettyString)}${this.prettyString}`
+        }
         return super.compile(values);
     };
 };
@@ -566,17 +569,19 @@ class LogIn extends CombadgePacket {
 class LogOut extends CombadgePacket {
     constructor (MAC, {} = {}) {
         super(MAC);
-        this.command = VozServerCommands.UserLogOut;
-        this.firstSetting = EmptySetting;
-        this.secondSetting = EmptySetting;
-        this.data = EmptySetting;
     };
 
     summary() {
-        return `Packet design incomplete. No summary available.`;
+        return `Logging user out.`;
     };
 
     compile() {
+        var values = {
+            command: VozServerCommands.UserLogOut,
+            firstSetting: EmptySetting,
+            secondSetting: EmptySetting,
+            data: ""
+        }
         return super.compile(values);
     };
 };
@@ -585,19 +590,29 @@ class LogOut extends CombadgePacket {
 /**
  * Send a prompt, I think this is for the logs only but I'm not sure.
  */
-/*
-sendPromptText () {
-    var promptText = "Prompt: I_have_no_idea_why_I_do_this";
-    var promptString = unucify(promptText);
-    var response = {};
-    response.serial = this.serverSerial;
-    response.command = VozServerCommands.TriggerBadgePrompt;
-    response.first = EmptySetting;
-    response.second = EmptySetting;
-    response.third = `${stringByteLength(promptString)}${promptString}`;
 
-    this.sendCommandToBadge(response);
-};*/
+class PromptText extends CombadgePacket {
+    constructor (MAC, {prompt = "default_prompt"} = {}) {
+        super(MAC);
+        this.prompt = prompt;
+    };
+
+    summary() {
+        return `Sending prompt: ${this.prompt}`;
+    };
+
+    compile() {
+        var promptText = "Prompt: " + this.prompt
+        var promptString = unicodeToHex(promptText);
+        var values = {
+            command: VozServerCommands.TriggerBadgePrompt,
+            firstSetting: EmptySetting,
+            secondSetting: EmptySetting,
+            data: `${stringByteLength(promptString)}${promptString}`
+        }
+        return super.compile(values);
+    };
+};
 
 /**
  * Send badge the name of the current AP. Currently just stubbing this out. We need to actuall manage AP names before we can give real ones.
@@ -636,7 +651,7 @@ export {
     HangUp,
     NewMessageA,
     LogIn,
-    LogOut
-    //sendPromptText
+    LogOut,
+    PromptText
     //sendAPName
 };
