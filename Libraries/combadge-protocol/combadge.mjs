@@ -112,6 +112,8 @@ class Combadge{
         var settings = new packets.BadgeSettings(this.MAC);
         settings.serial = this.serverSerial;
         this.sendCommandToBadge(settings);
+
+        this.callState = "Idle";
     };
     
     sendCommandToBadge(responsePacket) {
@@ -125,65 +127,68 @@ class Combadge{
         console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet.summary()}`);
         this.badgeSerial = packet.serial;
 
+        if (packet.constructor.name !== "Ack") {
+            var blankAck = new packets.Ack(this.MAC);
+            blankAck.serial = this.badgeSerial;
+            this.sendCommandToBadge(blankAck); 
+        };  
+
         switch(packet.constructor.name) {
-
             case "Ping":
-                this.accessPoint = packet.accessPoint;
-                
-                var blankAck = new packets.Ack(this.MAC);
-                blankAck.serial = this.badgeSerial;
-                this.sendCommandToBadge(blankAck);
-                break;
 
-            case "Ack": 
-                switch(this.initPhase) {
-                    case InitPhase.firstPing:
-                        //this.incrementSerial();
-                        //this.sendAPName();
-                        break;
-                    case InitPhase.apNameSet:
-                        break;
+                if (this.accessPoint !== packet.accessPoint) {
+                    this.accessPoint = packet.accessPoint;
+
+                    // If user has enabled patrol mode, record to track log.
+                    // Send badge new AP pretty name.
                 };
+
+                // If AP has not changed, do nothing.
                 break;
 
-            case "CallPressed": 
-                switch(packet.callState) {
-                    case false:
-                        var blankAck = new packets.Ack(this.MAC);
-                        blankAck.serial = this.badgeSerial;
-                        this.sendCommandToBadge(blankAck);
-                        
-                        this.serverSerial += 1;
+            case "CallPressed":
+                switch(this.callState) {
+                    case "Idle":
+                        switch(packet.callState) {
+                            case false:
+                                this.incrementSerial();
+        
+                                var setTargetToAgent = new packets.DisplayTarget(this.MAC);
+                                setTargetToAgent.serial = this.serverSerial;
+                                this.sendCommandToBadge(setTargetToAgent);
+                                break;
+        
+                            case true:
+                                this.incrementSerial();
+                                var callAgent = new packets.CallRTP(this.MAC, {address: this.UDPServer.address().address, port: 5299});
+                                callAgent.serial = this.serverSerial;
+                                this.sendCommandToBadge(callAgent);
+                                this.callState = "Active";
 
-                        var setTargetToAgent = new packets.DisplayTarget(this.MAC);
-                        setTargetToAgent.serial = this.serverSerial;
-                        this.sendCommandToBadge(setTargetToAgent);
+                                /**this.incrementSerial();
+                                var goodEvening = new packets.PromptText(this.MAC, {prompt: "genie"})
+                                goodEvening.serial = this.serverSerial;
+                                this.sendCommandToBadge(goodEvening);**/
+                                break;
+                        };
+                        break;
+                    
+                    case "Active":
+                        this.incrementSerial();
+                        var hangUp = new packets.HangUp(this.MAC);
+                        hangUp.serial = this.serverSerial;
+                        this.sendCommandToBadge(hangUp); 
+                        this.callState = "Ended";
                         break;
 
-                    case true:
-                        var blankAck = new packets.Ack(this.MAC);
-                        blankAck.serial = this.badgeSerial;
-                        this.sendCommandToBadge(blankAck);
-
-                        this.serverSerial += 1;
-
-                        var callAgent = new packets.CallRTP(this.MAC, {address: this.UDPServer.address().address, port: 5299});
-                        callAgent.serial = this.serverSerial;
-                        this.sendCommandToBadge(callAgent);
-                        break;
-                };
-                break;
+                    case "Ended":
+                        this.callState = "Idle";
+                }
 
             case "ErBits":
-                var blankAck = new packets.Ack(this.MAC);
-                blankAck.serial = this.badgeSerial;
-                this.sendCommandToBadge(blankAck);
                 break;
 
             case "BadgeLogs":
-                var blankAck = new packets.Ack(this.MAC);
-                blankAck.serial = this.badgeSerial;
-                this.sendCommandToBadge(blankAck);
                 break;
 
             default:
