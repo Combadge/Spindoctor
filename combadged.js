@@ -55,6 +55,11 @@ var agentPool = [];
  * to Combadge instances on demand for inferencing.
  */
 
+
+for (let rtpPort = rtpStartPort; rtpPort <= (rtpStartPort + rtpPoolInit); rtpPort++) {
+    console.log(rtpPort);
+}
+
 /**
  * 
  * Pseudocode:
@@ -84,7 +89,7 @@ var agentPool = [];
  * Handle the command and control protocol. Detect new badges to create Objects for
  * and pass traffic to existing badges based on MAC address.
  */
-controlServer.on('message', (message, clientInfo) => {
+controlServer.on('message', (message, clientInfo) => {  
     var address = clientInfo.address; var port = clientInfo.port;
     var packet = CombadgePacket.from(message)
     if (packet == undefined) {
