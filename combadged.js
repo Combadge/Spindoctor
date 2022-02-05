@@ -25,7 +25,7 @@
 
 import dgram from 'dgram';
 import { CombadgePacket, Combadge } from './Libraries/combadge-protocol/index.mjs';
-
+import { Agent } from './Libraries/robin-agent/index.mjs';
 
 const netAddress = '10.98.2.30';
 const updatePort = 5555;
@@ -47,18 +47,17 @@ updateServer.on('listening', () => {
 });
 
 
-const rtpStartPort = 5299; // Start here, go up.
+const rtpStartPort = 5300; // Start here, go up.
 const rtpPoolInit = 3; // Init this many agent threads to start.
-var agentPool = [];
+var agentPool = {};
+var activeAgents = [];
 /**
  * Populate agentPool with (rtpPoolInit) instances of open agent ports, that can be passed
  * to Combadge instances on demand for inferencing.
  */
 
 
-for (let rtpPort = rtpStartPort; rtpPort <= (rtpStartPort + rtpPoolInit); rtpPort++) {
-    console.log(rtpPort);
-}
+
 
 /**
  * 
@@ -83,7 +82,45 @@ for (let rtpPort = rtpStartPort; rtpPort <= (rtpStartPort + rtpPoolInit); rtpPor
  */
 
 
- var activeBadges = {};
+var activeBadges = {};
+
+class AgentSorter {
+    constructor () {
+    //set_up_the_agents;
+    this.Ports = {};
+    this.Agents = {};
+    }
+
+    createAgent (rtpPortNumber) {
+    rtpPort = dgram.createSocket('udp4');
+    rtpPort.bind(netAddress, rtpPortNumber)
+    rtpPort.on('listening', () => {
+        const address = rtpPort.address();
+        console.log(`Agent worker spawned at ${address.address}:${address.port}`);
+    });
+    rtpPort.on('message', (message, clientInfo) => {  
+        this.Agents[address.port].JooLiCommaDoTheThing;
+    });
+    }
+
+    getAgent () {
+    AssignedAgent = getAgentFromActivePool();
+    if (!AssignedAgent) {
+        AssignedAgent = new Agent;
+    }
+    return InstanceOfAgent
+    }
+
+    freeAgent (rtpPort) {
+        //releases agent to pool
+    }
+
+}
+
+Sorter = new AgentSorter();
+for (let rtpPort = rtpStartPort; rtpPort <= (rtpStartPort + (rtpPoolInit - 1)); rtpPort++) {
+    Sorter.createAgent(rtpPort);
+};
 
 /**
  * Handle the command and control protocol. Detect new badges to create Objects for

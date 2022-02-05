@@ -184,6 +184,7 @@ class Combadge{
                     case "Ended":
                         this.callState = "Idle";
                 }
+            
 
             case "ErBits":
                 break;
@@ -195,7 +196,13 @@ class Combadge{
         };
     };
 
-    
+    /**
+     * Callback for an Agent (or other software) to instruct the Combadge
+     * instance on what to do.
+     */
+    inferenceSorter (){
+
+    };
 
     /**
      * Provide the name of the current logged in user.
