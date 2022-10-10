@@ -19,9 +19,9 @@
     "url": "git+https://github.com/Combadge/Spindoctor.git"
   },
   "author": {
-    "name" : "Gray",
-    "email" : "mo-g@spindoctor.dev",
-    "url" : "https://github.com/mo-g"
+    "name": "Gray",
+    "email": "mo-g@spindoctor.dev",
+    "url": "https://github.com/mo-g"
   },
   "license": "AGPL-3.0",
   "bugs": {
@@ -30,7 +30,7 @@
   "homepage": "https://github.com/Combadge/Spindoctor#readme",
   "dependencies": {
     "alawmulaw": "^6.0.0",
-    "stt": "^1.1.0",
+    "stt": "^1.4.0",
     "tonegenerator": "^0.3.2",
     "wav": "^1.0.2",
     "wave-resampler": "^1.0.0"
