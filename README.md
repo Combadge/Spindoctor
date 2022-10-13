@@ -8,28 +8,21 @@ The application is single-licenced under the Affero GPL v3.0, a copyleft licence
 
 - Clone to a folder
 - run npm install to pull down all dependencies
-- use node to run combadged.js and agentd.js.
+- use node to run combadged.js.
 
 ## Current State ##
 
-- If you manually configure a B3000 badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably: mess around with three prototype agentd programs. The system may not work with "not-already-logged-in" badges, and currently does nothing else, including hanging up the call. Only way to shut it up is to pull the battery.
-- The controller code should in theory handle multiple badges, but this is not tested, the agent does not handle that and there would be no point since they won't interact yet.
-- Should work on Node 12, 14, 16? I've not been too brave.
+- If you manually configure a B2000, B3000 or B3000n badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably get some really bad speech recognition output. Pretty good for a hobby project!
+- The controller code will handle the existence of multiple badges, but as of yet they all fall back to the same agent instance - we'll hopefully fix that in v0.0.6.
+- Should work on Node 12, 14, 16? I've not been too brave. Doesn't work on node 18 due to STT issues.
 - Now requires AVX! THANKS, tflite. You'll run on a Pi 02, but not a brand new Atom or a Westmere Xeon... P.S. You can manually compile tflite, but blegh.
 
-v0.0.2 includes three different agentd programs.
-
-- agentd-record-5s literally just... records audio to disk in 8Khz 16bit PCM wav.
-- agentd-playtone plays a tone back to the badge over RTP. This is the same agentd from v0.0.1.
-- agentd - uses Coqui TTS (formerly DeepSpeech) to infer meaning from 5s of badge audio. You will need the "huge" acoustic and language models from Coqui. This has been tested on:
-  - Me doing an impersonation of a Queen's English voice saying "Hello. Doctor. Name. Continue. Yesterday. Tomorrow." It got most of it right. Don't try and dictate a book with this please.
-
+As of v0.0.5, the agent code has been merged into combadged - so all you should need to do is npm install, download the huge model and scorer from Coqui and launch that script. It ignores you while transcribing to avoid spooling up a bunch of parallel STT instances on slow hardware. The old agent files can no longer be used unless you modify combadged to not start audio ports. However, they have been kept around for use as references.
 
 ## Immediate To-Do-List ##
 
-- Continuous inferencing with silence detection.
-- TTS for responding to badge.
-- "Hang up" button and Server-Side hang up.
+- Continuous inferencing with silence detection. (VAD)
+- TTS and beeps for responding to badge.
 - User concept and ability to log in and log out a badge.
 - Badge to Badge calling.
 - Thread the voice agent, and trigger it from the Combadge protocol, so that it opens a new port for each new badge (at which point we should be able to handle multiple badges on the network).
@@ -69,7 +62,7 @@ If you are a company making networked coffee makers and like the idea of the "Co
 
 ### Conditions ###
 
-- Local control only, although we'd accept an internet based initial set-up of the machine (activate local mode) as long as it can run "off-grid" persistently after. We're not interested in supporting the OEM-server-dependent model of IoT, since reducing e-waste is literally the purpose of this project.
+- Local control only, although we'd accept an internet based initial set-up of the machine (activate local mode or generate access token) as long as it can run "off-grid" persistently after. We're not interested in supporting the OEM-server-dependent model of IoT, since reducing e-waste is literally the sole purpose of this project. Plus, I want to be able to install this in a spacecraft one day and there is no access to your cloud at 40 Eridani A.
 - We're not interested in adding black boxes or binary blobs to this project. All code necessary must be open.
 - Any machine(s) we do get satisfactory manafacturer-support for adding to the project will be encouragingly supported in documentation.
    - We're prepared to negotiate more prominent sponsor-status, but only if your machine supports never-online functioning including setup. Also, if your machine can additionally make "Tea, Earl Grey - Hot" and dispense water at multiple temperatures on demand - we're prepared to be **very** negotiable.
