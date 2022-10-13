@@ -60,20 +60,32 @@ class AgentManager {
         });
     };
 
-    getSpecificAgent (port) {
-        return this._FreeAgents.concat(this._AssignedAgents)[port]
+    getSpecificAgent (agentPort) {
+        return this._FreeAgents.concat(this._AssignedAgents)[agentPort]
     };
 
-    getAgent () {
-        AssignedAgent = getAgentFromActivePool();
-        if (!AssignedAgent) {
-            AssignedAgent = new Agent;
+    getAgent (callback) {
+        if (this._FreeAgents.length == 0) {
+            var maxKey = Math.max(...Object.keys(this._AssignedAgents));
+            if (maxKey >= rtpPortRangeEnd) {
+                throw "Reached maximum number of simultaneous Agents";
+            } else {
+                this.createAgent(maxKey++);
+            };
         };
-        return InstanceOfAgent;
+
+        var firstAgent = Object.keys(this._FreeAgents)[0];
+        this._AssignedAgents[firstAgent] = this._FreeAgents[firstAgent];
+        this._AssignedAgents[firstAgent].callback = callback;
+        delete this._FreeAgents[firstAgent];
+        return firstAgent;
     };
 
-    freeAgent (rtpPort) {
-        //releases agent to pool
+    freeAgent (agentPort) {
+        this._FreeAgents[agentPort] = this._AssignedAgents[agentPort];
+        this._FreeAgents[agentPort] = undefined;
+        delete this._AssignedAgents[agentPort];
+        return true;
     };
 
 }
@@ -118,8 +130,7 @@ controlServer.on('message', (message, clientInfo) => {
         activeBadges[packet.MAC].packetSorter(packet);
     } else {
         activeBadges[packet.MAC] = new Combadge(packet.MAC, address, port, packet, controlServer);
-        activeBadges[packet.MAC].agentPort = rtpPortRangeStart;
-        activeBadges[packet.MAC].agentInstance = Manager.getSpecificAgent[rtpPortRangeStart];
+        activeBadges[packet.MAC].agentPort = Manager.getAgent(activeBadges[packet.MAC].externalCallback);
     };
 });
 
