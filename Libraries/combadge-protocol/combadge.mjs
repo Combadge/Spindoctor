@@ -1,18 +1,18 @@
 /**
- * Spin Doctor, a Combadge Voice Server
+ * Combadge-protocol, an implementation of an OEM Combadge control protocol for Spin Doctor
  * Copyright (C) 2021-2022 The Combadge Project by mo-g
  *
- * Spin Doctor is free software: you can redistribute it and/or modify
+ * Combadge-protocol is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, version 3 of the License.
  *
- * Spin Doctor is distributed in the hope that it will be useful,
+ * Combadge-protocol is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Spin Doctor.  If not, see <https://www.gnu.org/licenses/>.
+ * along with Combadge-protocol.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 
@@ -115,6 +115,34 @@ class Combadge{
 
         this.callState = "Idle";
     };
+
+    get agentInstance() {
+        return this._agentInstance;
+    }
+
+    get agentPort() {
+        if (typeof this._agentPort !== 'undefined') {
+            return this._agentPort;
+        } else {
+            return false;
+        }
+    }
+
+    set agentPort(port) {
+        if (port == 0) {
+            delete this._agentPort;
+        } else {
+            this._agentPort = port;
+        }
+    }
+
+    set agentInstance(instance) {
+        if (this.agentPort == false) {
+            throw "Must set port before setting agent instance";
+        } else {
+            this._agentInstance = instance;
+        }
+    }
     
     sendCommandToBadge(responsePacket) {
         console.log(`${this.MAC} ${this.getUserPrettyName()}: TX [${responsePacket.serial}] ${responsePacket.constructor.name} ${responsePacket.summary()}`);
@@ -160,7 +188,7 @@ class Combadge{
         
                             case true:
                                 this.incrementSerial();
-                                var callAgent = new packets.CallRTP(this.MAC, {address: this.UDPServer.address().address, port: 5299});
+                                var callAgent = new packets.CallRTP(this.MAC, {address: this.UDPServer.address().address, port: this.agentPort});
                                 callAgent.serial = this.serverSerial;
                                 this.sendCommandToBadge(callAgent);
                                 this.callState = "Active";
@@ -184,6 +212,7 @@ class Combadge{
                     case "Ended":
                         this.callState = "Idle";
                 }
+            
 
             case "ErBits":
                 break;
@@ -195,7 +224,13 @@ class Combadge{
         };
     };
 
-    
+    /**
+     * Callback for an Agent (or other software) to instruct the Combadge
+     * instance on what to do.
+     */
+    inferenceSorter (){
+
+    };
 
     /**
      * Provide the name of the current logged in user.

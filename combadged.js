@@ -23,13 +23,60 @@
  */
 
 
-import dgram from 'dgram'; // The CnC Protocol is UDP-based.
+import dgram from 'dgram';
 import { CombadgePacket, Combadge } from './Libraries/combadge-protocol/index.mjs';
+import { Agent } from './Libraries/robin-agent/index.mjs';
+import { RTPHeader, RTPPacket } from './Libraries/rtp-protocol/index.mjs';
 
 
-const netAddress = '10.98.2.30'; // The interface to listen on.
-const updatePort = 5555; // The port for the updater service.
-const controlPort = 5002; // The port for the command-and-control service.
+const netAddress = '10.98.2.30';
+const updatePort = 5555;
+const controlPort = 5002;
+const rtpPortRangeStart = 5300; // Start here, go up.
+const rtpPoolInit = 5; // Init this many agent threads to start.
+const rtpPortRangeEnd = 5400 // Absolute cap of rtp, 
+
+
+class AgentManager {
+    constructor () {
+        //set_up_the_agents;
+        this._FreeAgents = {};
+        this._AssignedAgents = {};
+    };
+
+    createAgent (rtpPortNumber) {
+        var agent = new Agent;
+        this._FreeAgents[rtpPortNumber] = agent;
+        var rtpPort;
+        rtpPort = dgram.createSocket('udp4');
+        rtpPort.bind(rtpPortNumber, netAddress)
+        rtpPort.on('listening', () => {
+            const address = rtpPort.address();
+            console.log(`Agent worker spawned at ${address.address}:${address.port}`);
+        });
+        rtpPort.on('message', (message, clientInfo) => {  
+            var rtpPacket = RTPPacket.from(message);
+            agent.receiveSamples(rtpPacket.payload);
+        });
+    };
+
+    getSpecificAgent (port) {
+        return this._FreeAgents.concat(this._AssignedAgents)[port]
+    };
+
+    getAgent () {
+        AssignedAgent = getAgentFromActivePool();
+        if (!AssignedAgent) {
+            AssignedAgent = new Agent;
+        };
+        return InstanceOfAgent;
+    };
+
+    freeAgent (rtpPort) {
+        //releases agent to pool
+    };
+
+}
 
 
 const controlServer = dgram.createSocket('udp4');
@@ -47,12 +94,20 @@ updateServer.on('listening', () => {
 });
 
 var activeBadges = {};
+const Manager = new AgentManager;
+
+// Populate Manager with agents.
+
+for (let rtpPort = rtpPortRangeStart; rtpPort < (rtpPortRangeStart + rtpPoolInit); rtpPort++) {
+    console.log(`Spawning agent at port ${rtpPort}`)
+    Manager.createAgent(rtpPort);
+};   
 
 /**
  * Handle the command and control protocol. Detect new badges to create Objects for
  * and pass traffic to existing badges based on MAC address.
  */
-controlServer.on('message', (message, clientInfo) => {
+controlServer.on('message', (message, clientInfo) => {  
     var address = clientInfo.address; var port = clientInfo.port;
     var packet = CombadgePacket.from(message)
     if (packet == undefined) {
@@ -63,6 +118,8 @@ controlServer.on('message', (message, clientInfo) => {
         activeBadges[packet.MAC].packetSorter(packet);
     } else {
         activeBadges[packet.MAC] = new Combadge(packet.MAC, address, port, packet, controlServer);
+        activeBadges[packet.MAC].agentPort = rtpPortRangeStart;
+        activeBadges[packet.MAC].agentInstance = Manager.getSpecificAgent[rtpPortRangeStart];
     };
 });
 
