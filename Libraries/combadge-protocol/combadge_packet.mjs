@@ -16,6 +16,8 @@
  */
 
 
+import { UserIdent } from "./identifier.mjs";
+
 /**
  * The protocol ident from the command packet header.
  */
@@ -218,7 +220,9 @@ function stringByteLength (string) {
     };
 
     toBuffer (values) {
+
         var hexPackedPacket = VozIdent + values.command + values.firstSetting + values.secondSetting + this.hexSerial + this.MAC + values.data;
+        console.log(hexPackedPacket);
         return Buffer.from(hexPackedPacket, 'hex');
     }
 };
@@ -237,7 +241,7 @@ class Ping extends CombadgePacket {
         this.prettyName = packetData.prettyName;
     };
 
-    summary () {
+    toString () {
         return `AP: ${this.accessPoint}, login: ${this.userName}, name: ${this.prettyName}`;
     };
 
@@ -257,17 +261,21 @@ class Ping extends CombadgePacket {
         packetData = packetData.slice(14);
 
         var unameLength = packetData.slice(0,2).readInt16BE();
-        if (unameLength == 0) {unameLength = 2};
         var uname = packetData.slice(2,(unameLength+2)).toString('hex');
-        if (uname == "00") {uname = undefined};
-        dataValues.userName = hexToUnicode(uname);
+        if (uname == "") {
+            dataValues.userName = undefined;
+        } else {
+            dataValues.userName = hexToUnicode(uname);
+        };
         packetData = packetData.slice((unameLength+2));
 
         var pnameLength = packetData.slice(0,2).readInt16BE();
-        if (pnameLength == 0) {pnameLength = 2};
         var pname = packetData.slice(2,(pnameLength+2)).toString('hex');
-        if (pname == "00") {pname = undefined};
-        dataValues.prettyName = hexToUnicode(pname);
+        if (pname == "") {
+            dataValues.prettyName = undefined;
+        } else {
+            dataValues.prettyName = hexToUnicode(pname);
+        };
         packetData = packetData.slice((pnameLength+2));
 
         var __40spacer = packetData.slice(0, 20);
@@ -293,7 +301,7 @@ class Ack extends CombadgePacket {
         this.sendAudio = sendAudio;
     };
 
-    summary () {
+    toString () {
         if (this.sendTime) {
             return `Sending Timestamp`;
         } else {
@@ -347,7 +355,7 @@ class Ack extends CombadgePacket {
         super(MAC);
     };
 
-    summary () {
+    toString () {
         return `Packet design incomplete. No summary available.`;
     };
 
@@ -372,7 +380,7 @@ class BadgeSettings extends CombadgePacket {
         super(MAC);
     };
 
-    summary () {
+    toString () {
         return `Packet design incomplete. No summary available.`;
     };
 
@@ -395,7 +403,7 @@ class CallPressed extends CombadgePacket {
         this.callState = callState;
     };
 
-    summary () {
+    toString () {
         if (this.callState) {
             return `Dialling in progress.`;
         } else {
@@ -424,7 +432,7 @@ class ErBits extends CombadgePacket {
         this.erbits = erbits;
     };
 
-    summary () {
+    toString () {
         return `Packet design incomplete. No summary available.`;
     };
 
@@ -450,7 +458,7 @@ class BadgeLogs extends CombadgePacket {
         this.badgeLogs = badgeLogs;
     };
 
-    summary () {
+    toString () {
         return `Packet design incomplete. No summary available.`;
     };
 
@@ -477,7 +485,7 @@ class BadgeLogs extends CombadgePacket {
         this.displayString = displayString;
     };
 
-    summary () {
+    toString () {
         return `Setting display to: ${this.displayString}`;
     };
 
@@ -508,7 +516,7 @@ class CallRTP extends CombadgePacket {
         this.targetPort = port;
     };
 
-    summary () {
+    toString () {
         return `Calling RTP host at ${this.targetAddress}:${this.targetPort}`;
     };
 
@@ -528,7 +536,7 @@ class HangUp extends CombadgePacket {
         super(MAC);
     };
 
-    summary () {
+    toString () {
         return `Ending active call.`;
     };
 
@@ -544,14 +552,13 @@ class HangUp extends CombadgePacket {
 };
 
 class LogIn extends CombadgePacket {
-    constructor (MAC, {userName = "u-atestuser", prettyName = "Alex Testuser"} = {}) {
+    constructor (MAC, userIdent = new UserIdent) {
         super(MAC);
-        this.userString = unicodeToHex(userName);
-        this.prettyString = unicodeToHex (prettyName);
+        this.userIdent = userIdent
     };
 
-    summary () {
-        return `Packet design incomplete. No summary available.`;
+    toString () {
+        return `Logging in user ${this.userIdent}`;
     };
 
     toBuffer () {
@@ -559,8 +566,8 @@ class LogIn extends CombadgePacket {
             command: VozServerCommands.UserLogIn,
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
-            data: `${stringByteLength(this.userString)}${this.userString}${stringByteLength(this.prettyString)}${this.prettyString}`
-        }
+            data: this.userIdent.toBuffer().toString('hex')
+        };
         return super.toBuffer(values);
     };
 };
@@ -571,7 +578,7 @@ class LogOut extends CombadgePacket {
         super(MAC);
     };
 
-    summary () {
+    toString () {
         return `Logging user out.`;
     };
 
@@ -597,7 +604,7 @@ class PromptText extends CombadgePacket {
         this.prompt = prompt;
     };
 
-    summary () {
+    toString () {
         return `Sending prompt: ${this.prompt}`;
     };
 

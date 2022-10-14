@@ -17,13 +17,14 @@
 
 
 import * as packets from './combadge_packet.mjs';
+import { Identifier, UserIdent } from './identifier.mjs';
 
 
-// 0014 aeaeaeae0014000000000000000c0009ef07e007005d5265636f676e697a6572434d53746174653a20526563526573756c74733d41736b466f724e616d652c47726179204d61726368696f72692d53696d70736f6e2c20436f6e663d302e3635204772616d6d61723d73696e676c656e616d65
+// 0014 aeaeaeae0014000000000000000c0009ef07e007005d5265636f676e697a6572434d53746174653a20526563526573756c74733d41736b466f724e616d652c000000000000000000000000000000000000000000002c20436f6e663d302e3635204772616d6d61723d73696e676c656e616d65 RecognizerCMState: RecResults=AskForName,<Username>, Conf=0.65 Grammar=singlename
 // RecognizerCMState: RecResults=LogOut Conf=0.83 Grammar=mainmenu
-// 0014 aeaeaeae0014000000000000001e0009ef07e007 003f 5265636f676e697a6572434d53746174653a20526563526573756c74733d4c6f674f757420436f6e663d302e3833204772616d6d61723d6d61696e6d656e75
+// 0014 aeaeaeae0014000000000000001e0009ef07e007 003f 5265636f676e697a6572434d53746174653a20526563526573756c74733d4c6f674f757420436f6e663d302e3833204772616d6d61723d6d61696e6d656e75 RecognizerCMState: RecResults=LogOut Conf=0.83 Grammar=mainmenu
 // 0014 aeaeaeae001400000000000000160009ef07e007 0007 5965734f724e6f "YesOrNo"
-// 0014 aeaeaeae001400000000000000950009ef07e007 003f 5265636f676e697a6572434d53746174653a20526563526573756c74733d4c6f674f757420436f6e663d302e3834204772616d6d61723d6d61696e6d656e75
+// 0014 aeaeaeae001400000000000000950009ef07e007 003f 5265636f676e697a6572434d53746174653a20526563526573756c74733d4c6f674f757420436f6e663d302e3834204772616d6d61723d6d61696e6d656e75 RecognizerCMState: RecResults=LogOut Conf=0.83 Grammar=mainmenu
 //Prompt: 
 const VozPrompts = [
     "say_or_spell_your_first_and_last_name",
@@ -71,11 +72,6 @@ const VozPrompts = [
     "telephony_server_not_started"
 ];
 
-const InitPhase = {
-    firstPing: "First Ping Received",
-    apNameSet: "AP name set"
-};
-
 
 /**
  * Combadge describes an instance of a Combadge existing on the network.
@@ -83,11 +79,11 @@ const InitPhase = {
  * This class contains the logic for exchanging CombadgePackets with a Combadge device, 
  */
 class Combadge{
+
     constructor (MAC, IP, sourceUDPPort, packet, UDPServer) {
         
         this.IP = IP;
         this.MAC = MAC;
-        this.User = undefined;
         if(packet.constructor.name !== "Ping") {
             console.log("Invalid packet passed to Combadge Constructor.");
         };
@@ -99,11 +95,18 @@ class Combadge{
         this.serverSerial = this.badgeSerial;
 
         this.accessPoint = packet.accessPoint;
-        
-        this.userName = "u-afakeuser";
-        this.prettyName = "Alex Fakeuser";
 
-        console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet.summary()}`);
+        this._agentPort = undefined;
+        
+        if (!(packet.userName == undefined)) {
+            this.loginState = true;
+            this._user = new UserIdent(packet.userName, packet.prettyName);
+        } else {
+            this._user = undefined;
+            this.loginState = false;
+        }
+
+        console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet}`);
 
         var timeAck = new packets.Ack(this.MAC, {sendTime: true});
         timeAck.serial = this.serverSerial;
@@ -112,8 +115,6 @@ class Combadge{
         var settings = new packets.BadgeSettings(this.MAC);
         settings.serial = this.serverSerial;
         this.sendCommandToBadge(settings);
-
-        this._agentPort = undefined;
 
         this.callState = "Idle";
     };
@@ -125,16 +126,53 @@ class Combadge{
     set agentPort (port) {
         this._agentPort = port;
     };
+
+    get user () {
+        return this._user;
+    };
+
+    set user (ident = new UserIdent("u-setuser", "SetUser Called")) {
+        this._user = ident;
+        this.incrementSerial();
+        var login = new packets.LogIn(this.MAC, this._user);
+        login.serial = this.serverSerial;
+        this.sendCommandToBadge(login);
+    };
+
+    /**
+     * Supercedes the Object() toString() function, allowing us to define how a Combadge instance appears in text.
+     * 
+     * @returns String()
+     */
+    toString () {
+        return `Combadge ${this.MAC} is hosting user ${this._user} at location ${this.accessPoint}`;
+    };
+
+    /**
+     * Used by JSON.Stringify() to represent the class in json format - mainly in our case for API use,
+     * but we may find other benefits in loggin and saving?
+     * 
+     * Should not return function calls as object values! Only things that can be represented in JSON form!
+     * 
+     * @returns Object()
+     */
+    toJSON () {
+        var state = new Object();
+        state.MAC = this.MAC;
+        state.IP = this.IP;
+        state.user = this._user;
+        state.status = this.callState;
+        state.callTarget = null;
+        return state;
+    };
     
     sendCommandToBadge (responsePacket) {
-        console.log(`${this.MAC} ${this.getUserPrettyName()}: TX [${responsePacket.serial}] ${responsePacket.constructor.name} ${responsePacket.summary()}`);
-        var compiledPacket = responsePacket.toBuffer();
-        this.UDPServer.send(compiledPacket, this.sourceUDPPort, this.IP);
-
+        console.log(`${this.MAC} ${this.getUserPrettyName()}: TX [${responsePacket.serial}] ${responsePacket.constructor.name} ${responsePacket}`);
+        this.UDPServer.send(responsePacket.toBuffer(), this.sourceUDPPort, this.IP);
     };
 
     packetSorter (packet) {
-        console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet.summary()}`);
+        console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet}`);
         this.badgeSerial = packet.serial;
 
         if (packet.constructor.name !== "Ack") {
@@ -145,12 +183,20 @@ class Combadge{
 
         switch(packet.constructor.name) {
             case "Ping":
+                if (!(packet.userName == undefined)) {
+                    this.loginState = true;
+                };
 
                 if (this.accessPoint !== packet.accessPoint) {
                     this.accessPoint = packet.accessPoint;
 
                     // If user has enabled patrol mode, record to track log.
                     // Send badge new AP pretty name.
+                } else if (!this.loginState) {
+                    this.incrementSerial();
+                    var login = new packets.LogIn(this.MAC, new UserIdent("u-mobrien", "Miles O'Brien"));
+                    login.serial = this.serverSerial;
+                    this.sendCommandToBadge(login);
                 };
 
                 // If AP has not changed, do nothing.
@@ -225,9 +271,20 @@ class Combadge{
     /**
      * Callback for an Agent (or other software) to instruct the Combadge
      * instance on what to do.
+     * 
+     * Initially this will be hooked to a basic restful web API so we can manually tell the badge what to do without the agent being involved.
      */
-    externalCallback (instruction) {
+    externalCallback (instruction, values) {
+        switch(instruction) {
+            case "login":
+                console.log("API request user change", this.MAC, values)
+                this.user = new UserIdent(values.userName, values.prettyName);
+            break;
 
+            default:
+        };
+
+        return true;
     };
 };
 

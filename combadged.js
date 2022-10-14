@@ -27,9 +27,12 @@ import dgram from 'dgram';
 import { CombadgePacket, Combadge } from './Libraries/combadge-protocol/index.mjs';
 import { Agent } from './Libraries/robin-agent/index.mjs';
 import { RTPHeader, RTPPacket } from './Libraries/rtp-protocol/index.mjs';
+import express from 'express';
+import bodyparser from 'body-parser';
 
 
 const netAddress = '10.98.2.30';
+const apiPort = 1031; // Canonically the earliest appearance of combadges is Disco, so - NCC (port) 1031.
 const updatePort = 5555;
 const controlPort = 5002;
 const rtpPortRangeStart = 5300; // Start here, go up.
@@ -142,3 +145,27 @@ updateServer.on('message', (message, clientInfo) => {
     console.log(`Received datagram from badge at ${clientInfo.address}:${clientInfo.port}`);
     console.log(message.toString('hex'));
 });
+
+var app = new express();
+app.use(bodyparser.json());
+app.use(bodyparser.urlencoded({ extended: true }));
+
+app.get('/', (request, responder) => {
+    return responder.send(["badges"]);
+});
+
+app.get('/badges', (request, responder) => {
+    return responder.send(Object.keys(activeBadges));
+});
+
+app.get('/badges/:badgeMAC', (request, responder) => {
+    return responder.send(activeBadges[request.params.badgeMAC]);
+});
+
+app.post('/badges/:badgeMAC/user', (request, responder) => {
+    return responder.send(activeBadges[request.params.badgeMAC].externalCallback("login", request.body));
+});
+
+app.listen(apiPort, () =>
+    console.log(`Combadge control REST API now active on TCP port ${apiPort}!`),
+);
