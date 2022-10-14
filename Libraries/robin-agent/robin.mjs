@@ -42,14 +42,14 @@ console.error('Loaded model.');
  * Currently stubbed.
  */
 class Agent {
-    constructor(responseHook) {
-        this.responseHook = responseHook; // A function to call back to the parent Combadge to give instructions such as "call another badge".
+    constructor (callback = undefined) {
         this.samples = []
         this.recSamples = []
         this.transcoding = false;
+        this._callback = callback;
     };
 
-    recogniseBatch() {
+    recogniseBatch () {
         console.log("Transcoding, please wait.")
         this.transcoding = true;
         var floatSamples=Float32Array.from(Float32Array.from(this.recSamples).map(x=>x/0x8000));
@@ -58,9 +58,9 @@ class Agent {
         var wav16buffer = new Buffer.from(samples1616.buffer);
         console.log("Result:", model.stt(wav16buffer));
         this.transcoding = false;
-    }
+    };
 
-    receiveSamples(samples) {
+    receiveSamples (samples) {
         if (this.transcoding == false) {
             this.samples.push(...samples);
         }
@@ -70,6 +70,15 @@ class Agent {
             this.recogniseBatch();
         }
         return true;
+    };
+
+    set callback (callback = undefined) {
+        // Future task - verify that callback is either undefined or a function here.
+        this._callback = callback;
+    }
+
+    get callback () {
+        return this._callback;
     }
 };
 

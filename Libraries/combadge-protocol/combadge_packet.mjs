@@ -70,13 +70,13 @@ const VozServerCommands = {
  * 
  * Is quicker, someone let me know and I'll substitute it.
  */
- const VozBadgeCommands = function(serverCommands) {
+ const VozBadgeCommands = function (serverCommands) {
     var badgeCommands = {};
-    for(var command in serverCommands){
+    for (var command in serverCommands) {
         badgeCommands[serverCommands[command]] = command;
     };
     return badgeCommands;
-}(VozServerCommands);
+} (VozServerCommands);
 
 const VozAudioProtocol = {
     RTP: "0400",
@@ -149,7 +149,7 @@ function stringByteLength (string) {
      
     _serial = new String();
 
-    constructor(macAddress) {
+    constructor (macAddress) {
         this.MAC = macAddress
     }
 
@@ -227,7 +227,7 @@ function stringByteLength (string) {
  * Cannot be compiled, only ever received from the badge, never sent to it.
  */
 class Ping extends CombadgePacket {
-    constructor(MAC, {propertyVersion = EmptySetting, firmwareVersion = EmptySetting, packetData = {}} = {}) {
+    constructor (MAC, {propertyVersion = EmptySetting, firmwareVersion = EmptySetting, packetData = {}} = {}) {
         super(MAC);
         this.propertyVersion = propertyVersion;
         this.firmwareVersion = firmwareVersion;
@@ -237,11 +237,11 @@ class Ping extends CombadgePacket {
         this.prettyName = packetData.prettyName;
     };
 
-    summary() {
+    summary () {
         return `AP: ${this.accessPoint}, login: ${this.userName}, name: ${this.prettyName}`;
     };
 
-    static from(structuredPacket) {
+    static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
         var packetSerial = structuredPacket.serial;
         var propertyVersion = parseInt(structuredPacket.firstSetting, 16);
@@ -293,7 +293,7 @@ class Ack extends CombadgePacket {
         this.sendAudio = sendAudio;
     };
 
-    summary() {
+    summary () {
         if (this.sendTime) {
             return `Sending Timestamp`;
         } else {
@@ -301,7 +301,7 @@ class Ack extends CombadgePacket {
         };
     };
 
-    static from(structuredPacket) {
+    static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
         var packetSerial = structuredPacket.serial;
         var propertyVersion = parseInt(structuredPacket.firstSetting, 16);
@@ -313,7 +313,7 @@ class Ack extends CombadgePacket {
         return returnPacket;
     };
 
-    compile() {
+    compile () {
         if (this.sendTime) {
             var unixtime = Date.now() / 1000 | 0;
             var data = `${unixtime.toString(16)}0000012b`;
@@ -347,11 +347,11 @@ class Ack extends CombadgePacket {
         super(MAC);
     };
 
-    summary() {
+    summary () {
         return `Packet design incomplete. No summary available.`;
     };
 
-    compile() {
+    compile () {
         var values = {
             command: VozServerCommands.NewMessageA,
             firstSetting: EmptySetting,
@@ -372,11 +372,11 @@ class BadgeSettings extends CombadgePacket {
         super(MAC);
     };
 
-    summary() {
+    summary () {
         return `Packet design incomplete. No summary available.`;
     };
 
-    compile() {
+    compile () {
         var values = {
             command: VozServerCommands.SetBadgeSettings,
             firstSetting: EmptySetting,
@@ -395,7 +395,7 @@ class CallPressed extends CombadgePacket {
         this.callState = callState;
     };
 
-    summary() {
+    summary () {
         if (this.callState) {
             return `Dialling in progress.`;
         } else {
@@ -403,7 +403,7 @@ class CallPressed extends CombadgePacket {
         };
     };
 
-    static from(structuredPacket) {
+    static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
         var packetSerial = structuredPacket.serial;
         var propertyVersion = parseInt(structuredPacket.firstSetting, 16);
@@ -424,11 +424,11 @@ class ErBits extends CombadgePacket {
         this.erbits = erbits;
     };
 
-    summary() {
+    summary () {
         return `Packet design incomplete. No summary available.`;
     };
 
-    static from(structuredPacket) {
+    static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
         var packetSerial = structuredPacket.serial;
         var propertyVersion = parseInt(structuredPacket.firstSetting, 16);
@@ -450,11 +450,11 @@ class BadgeLogs extends CombadgePacket {
         this.badgeLogs = badgeLogs;
     };
 
-    summary() {
+    summary () {
         return `Packet design incomplete. No summary available.`;
     };
 
-    static from(structuredPacket) {
+    static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
         var packetSerial = structuredPacket.serial;
         var propertyVersion = parseInt(structuredPacket.firstSetting, 16);
@@ -477,11 +477,11 @@ class BadgeLogs extends CombadgePacket {
         this.displayString = displayString;
     };
 
-    summary() {
+    summary () {
         return `Setting display to: ${this.displayString}`;
     };
 
-    compile() {
+    compile () {
         var displayString = unicodeToHex(this.displayString);
         var displayStringLength = stringByteLength(displayString);
         var endPadding = "".padEnd(12,"00");
@@ -508,11 +508,11 @@ class CallRTP extends CombadgePacket {
         this.targetPort = port;
     };
 
-    summary() {
+    summary () {
         return `Calling RTP host at ${this.targetAddress}:${this.targetPort}`;
     };
 
-    compile() {
+    compile () {
         var values = {
             command: VozServerCommands.CallRTPTarget,
             firstSetting: EmptySetting,
@@ -528,11 +528,11 @@ class HangUp extends CombadgePacket {
         super(MAC);
     };
 
-    summary() {
+    summary () {
         return `Ending active call.`;
     };
 
-    compile() {
+    compile () {
         var values = {
             command: VozServerCommands.HangUp,
             firstSetting: EmptySetting,
@@ -550,11 +550,11 @@ class LogIn extends CombadgePacket {
         this.prettyString = unicodeToHex (prettyName);
     };
 
-    summary() {
+    summary () {
         return `Packet design incomplete. No summary available.`;
     };
 
-    compile() {
+    compile () {
         var values = {
             command: VozServerCommands.UserLogIn,
             firstSetting: EmptySetting,
@@ -571,11 +571,11 @@ class LogOut extends CombadgePacket {
         super(MAC);
     };
 
-    summary() {
+    summary () {
         return `Logging user out.`;
     };
 
-    compile() {
+    compile () {
         var values = {
             command: VozServerCommands.UserLogOut,
             firstSetting: EmptySetting,
@@ -597,11 +597,11 @@ class PromptText extends CombadgePacket {
         this.prompt = prompt;
     };
 
-    summary() {
+    summary () {
         return `Sending prompt: ${this.prompt}`;
     };
 
-    compile() {
+    compile () {
         var promptText = "Prompt: " + this.prompt
         var promptString = unicodeToHex(promptText);
         var values = {
@@ -618,7 +618,7 @@ class PromptText extends CombadgePacket {
  * Send badge the name of the current AP. Currently just stubbing this out. We need to actuall manage AP names before we can give real ones.
  */
 /*
-sendAPName() {
+sendAPName () {
 
     var accessPointName = new String("Test APNAME");
     var accessPointName = unucify(accessPointName);

@@ -83,7 +83,7 @@ const InitPhase = {
  * This class contains the logic for exchanging CombadgePackets with a Combadge device, 
  */
 class Combadge{
-    constructor(MAC, IP, sourceUDPPort, packet, UDPServer) {
+    constructor (MAC, IP, sourceUDPPort, packet, UDPServer) {
         
         this.IP = IP;
         this.MAC = MAC;
@@ -113,45 +113,27 @@ class Combadge{
         settings.serial = this.serverSerial;
         this.sendCommandToBadge(settings);
 
+        this._agentPort = undefined;
+
         this.callState = "Idle";
     };
 
-    get agentInstance() {
-        return this._agentInstance;
-    }
+    get agentPort () {
+        return this._agentPort;
+    };
 
-    get agentPort() {
-        if (typeof this._agentPort !== 'undefined') {
-            return this._agentPort;
-        } else {
-            return false;
-        }
-    }
-
-    set agentPort(port) {
-        if (port == 0) {
-            delete this._agentPort;
-        } else {
-            this._agentPort = port;
-        }
-    }
-
-    set agentInstance(instance) {
-        if (this.agentPort == false) {
-            throw "Must set port before setting agent instance";
-        } else {
-            this._agentInstance = instance;
-        }
-    }
+    set agentPort (port) {
+        this._agentPort = port;
+    };
     
-    sendCommandToBadge(responsePacket) {
+    sendCommandToBadge (responsePacket) {
         console.log(`${this.MAC} ${this.getUserPrettyName()}: TX [${responsePacket.serial}] ${responsePacket.constructor.name} ${responsePacket.summary()}`);
         var compiledPacket = responsePacket.compile();
         this.UDPServer.send(compiledPacket, this.sourceUDPPort, this.IP);
 
     };
 
-    packetSorter(packet) {
+    packetSorter (packet) {
         console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet.summary()}`);
         this.badgeSerial = packet.serial;
 
@@ -225,17 +207,9 @@ class Combadge{
     };
 
     /**
-     * Callback for an Agent (or other software) to instruct the Combadge
-     * instance on what to do.
-     */
-    inferenceSorter (){
-
-    };
-
-    /**
      * Provide the name of the current logged in user.
      */
-     getUserPrettyName() {
+     getUserPrettyName () {
         //var user = this.User;
         return "Inactive";
     };
@@ -244,8 +218,16 @@ class Combadge{
     /**
      * Append a new serial to the serial list.
      */
-    incrementSerial() {
+    incrementSerial () {
         this.serverSerial += 1;
+    };
+
+    /**
+     * Callback for an Agent (or other software) to instruct the Combadge
+     * instance on what to do.
+     */
+    externalCallback (instruction) {
+
     };
 };
 
