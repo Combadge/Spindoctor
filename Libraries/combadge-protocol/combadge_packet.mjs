@@ -217,7 +217,7 @@ function stringByteLength (string) {
         }
     };
 
-    compile (values) {
+    toBuffer (values) {
         var hexPackedPacket = VozIdent + values.command + values.firstSetting + values.secondSetting + this.hexSerial + this.MAC + values.data;
         return Buffer.from(hexPackedPacket, 'hex');
     }
@@ -280,7 +280,7 @@ class Ping extends CombadgePacket {
         return returnPacket;
     };
 
-    compile () {
+    toBuffer () {
         throw TypeError("Ping is a badge-only command and cannot be compiled.");
     };
 };
@@ -313,7 +313,7 @@ class Ack extends CombadgePacket {
         return returnPacket;
     };
 
-    compile () {
+    toBuffer () {
         if (this.sendTime) {
             var unixtime = Date.now() / 1000 | 0;
             var data = `${unixtime.toString(16)}0000012b`;
@@ -333,7 +333,7 @@ class Ack extends CombadgePacket {
             secondSetting: audioProtocol,
             data: data
         }
-        return super.compile(values)
+        return super.toBuffer(values)
     }
 };
 
@@ -351,14 +351,14 @@ class Ack extends CombadgePacket {
         return `Packet design incomplete. No summary available.`;
     };
 
-    compile () {
+    toBuffer () {
         var values = {
             command: VozServerCommands.NewMessageA,
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: "".padEnd(20,"04")
         }
-        return super.compile(values)
+        return super.toBuffer(values)
     };
 };
 
@@ -376,14 +376,14 @@ class BadgeSettings extends CombadgePacket {
         return `Packet design incomplete. No summary available.`;
     };
 
-    compile () {
+    toBuffer () {
         var values = {
             command: VozServerCommands.SetBadgeSettings,
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: '40bb8cf3'.padEnd(20,"04")
         }
-        return super.compile(values)
+        return super.toBuffer(values)
     };
 };
 
@@ -481,7 +481,7 @@ class BadgeLogs extends CombadgePacket {
         return `Setting display to: ${this.displayString}`;
     };
 
-    compile () {
+    toBuffer () {
         var displayString = unicodeToHex(this.displayString);
         var displayStringLength = stringByteLength(displayString);
         var endPadding = "".padEnd(12,"00");
@@ -493,7 +493,7 @@ class BadgeLogs extends CombadgePacket {
             secondSetting: EmptySetting,
             data: data
         }
-        return super.compile(values)
+        return super.toBuffer(values)
     };
 };
 
@@ -512,14 +512,14 @@ class CallRTP extends CombadgePacket {
         return `Calling RTP host at ${this.targetAddress}:${this.targetPort}`;
     };
 
-    compile () {
+    toBuffer () {
         var values = {
             command: VozServerCommands.CallRTPTarget,
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: `000100010001${ipDecToHex(this.targetAddress)}${parseInt(this.targetPort).toString(16)}000100`
         }
-        return super.compile(values)
+        return super.toBuffer(values)
     };
 };  
 
@@ -532,14 +532,14 @@ class HangUp extends CombadgePacket {
         return `Ending active call.`;
     };
 
-    compile () {
+    toBuffer () {
         var values = {
             command: VozServerCommands.HangUp,
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: ""
         }
-        return super.compile(values);
+        return super.toBuffer(values);
     };
 };
 
@@ -554,14 +554,14 @@ class LogIn extends CombadgePacket {
         return `Packet design incomplete. No summary available.`;
     };
 
-    compile () {
+    toBuffer () {
         var values = {
             command: VozServerCommands.UserLogIn,
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: `${stringByteLength(this.userString)}${this.userString}${stringByteLength(this.prettyString)}${this.prettyString}`
         }
-        return super.compile(values);
+        return super.toBuffer(values);
     };
 };
 
@@ -575,14 +575,14 @@ class LogOut extends CombadgePacket {
         return `Logging user out.`;
     };
 
-    compile () {
+    toBuffer () {
         var values = {
             command: VozServerCommands.UserLogOut,
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: ""
         }
-        return super.compile(values);
+        return super.toBuffer(values);
     };
 };
 
@@ -601,7 +601,7 @@ class PromptText extends CombadgePacket {
         return `Sending prompt: ${this.prompt}`;
     };
 
-    compile () {
+    toBuffer () {
         var promptText = "Prompt: " + this.prompt
         var promptString = unicodeToHex(promptText);
         var values = {
@@ -610,7 +610,7 @@ class PromptText extends CombadgePacket {
             secondSetting: EmptySetting,
             data: `${stringByteLength(promptString)}${promptString}`
         }
-        return super.compile(values);
+        return super.toBuffer(values);
     };
 };
 

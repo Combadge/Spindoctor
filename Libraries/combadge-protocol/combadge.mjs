@@ -128,7 +128,7 @@ class Combadge{
     
     sendCommandToBadge (responsePacket) {
         console.log(`${this.MAC} ${this.getUserPrettyName()}: TX [${responsePacket.serial}] ${responsePacket.constructor.name} ${responsePacket.summary()}`);
-        var compiledPacket = responsePacket.compile();
+        var compiledPacket = responsePacket.toBuffer();
         this.UDPServer.send(compiledPacket, this.sourceUDPPort, this.IP);
 
     };
