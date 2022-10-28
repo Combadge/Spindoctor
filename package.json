@@ -30,10 +30,12 @@
   "homepage": "https://github.com/Combadge/Spindoctor#readme",
   "dependencies": {
     "alawmulaw": "^6.0.0",
+    "body-parser": "^1.20.1",
+    "express": "^4.18.2",
+    "node-vad": "^1.1.4",
     "stt": "^1.4.0",
     "tonegenerator": "^0.3.2",
     "wav": "^1.0.2",
-    "wave-resampler": "^1.0.0",
-    "node-vad": "^1.1.4"
+    "wave-resampler": "^1.0.0"
   }
 }

@@ -12,20 +12,19 @@ The application is single-licenced under the Affero GPL v3.0, a copyleft licence
 
 ## Current State ##
 
-- If you manually configure a B2000, B3000 or B3000n badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably get some really bad speech recognition output. Pretty good for a hobby project!
-- The controller code will handle the existence of multiple badges, but as of yet they all fall back to the same agent instance - we'll hopefully fix that in v0.0.6.
+- If you manually configure a B2000, B3000 or B3000n badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably get some really bad speech recognition output. Pretty good for a hobby project! If you have multiple badges you should also be able to manually trigger a badge-badge call through the web API.
+- The controller code will handle the existence of multiple badges, and will transcribe each stream fully independently. So far, the transcription is terrible and nothing is done with it - but it is technically functional.
+- There is a rudimentary self-describing API at port 1031. You can send the json `{"userName":"u-jdax","prettyName":"Jadzia Dax"}` or similar to the `/badge/:macaddress/user` endpoint on the api to change user on a badge.
 - Should work on Node 12, 14, 16? I've not been too brave. Doesn't work on node 18 due to STT issues.
 - Now requires AVX! THANKS, tflite. You'll run on a Pi 02, but not a brand new Atom or a Westmere Xeon... P.S. You can manually compile tflite, but blegh.
 
-As of v0.0.5, the agent code has been merged into combadged - so all you should need to do is npm install, download the huge model and scorer from Coqui and launch that script. It ignores you while transcribing to avoid spooling up a bunch of parallel STT instances on slow hardware. The old agent files can no longer be used unless you modify combadged to not start audio ports. However, they have been kept around for use as references.
+Since v0.0.5, the agent code has been merged into combadged - so all you should need to do is npm install, download the huge model and scorer from Coqui and launch that script. It ignores you while transcribing to avoid spooling up a bunch of parallel STT instances on slow hardware. Once we have VAD in place we may be able to get rid of that restriction. The old agent files can no longer be used unless you modify combadged to not start audio ports. However, they have been kept around for use as references.
 
 ## Immediate To-Do-List ##
 
 - Continuous inferencing with silence detection. (VAD)
 - TTS and beeps for responding to badge.
 - User concept and ability to log in and log out a badge.
-- Badge to Badge calling.
-- Thread the voice agent, and trigger it from the Combadge protocol, so that it opens a new port for each new badge (at which point we should be able to handle multiple badges on the network).
 - Hook some kind of NLP into the agent, to be able to recognise basic log in/out.
 - Convince someone to send me a free network-controllable bean-to-cup coffee machine so I can hook into its protocol.
 
