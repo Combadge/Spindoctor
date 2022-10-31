@@ -131,12 +131,16 @@ class Combadge{
         return this._user;
     };
 
-    set user (ident = new UserIdent("u-setuser", "SetUser Called")) {
+    set user (ident = undefined) {
         this._user = ident;
         this.incrementSerial();
-        var login = new packets.LogIn(this.MAC, this._user);
-        login.serial = this.serverSerial;
-        this.sendCommandToBadge(login);
+        if (this._user) {
+            var action = new packets.LogIn(this.MAC, this._user);
+        } else {
+            var action = new packets.LogOut(this.MAC);
+        };
+        action.serial = this.serverSerial;
+        this.sendCommandToBadge(action);
     };
 
     /**
@@ -193,10 +197,7 @@ class Combadge{
                     // If user has enabled patrol mode, record to track log.
                     // Send badge new AP pretty name.
                 } else if (!this.loginState) {
-                    this.incrementSerial();
-                    var login = new packets.LogIn(this.MAC, new UserIdent("u-mobrien", "Miles O'Brien"));
-                    login.serial = this.serverSerial;
-                    this.sendCommandToBadge(login);
+                    this.loginState == false;
                 };
 
                 // If AP has not changed, do nothing.
@@ -274,12 +275,17 @@ class Combadge{
      * 
      * Initially this will be hooked to a basic restful web API so we can manually tell the badge what to do without the agent being involved.
      */
-    externalCallback (instruction, values) {
+    externalCallback (instruction, values={}) {
         switch(instruction) {
             case "login":
-                console.log("API request user change", this.MAC, values)
+                console.log("API request badge login", this.MAC, values);
                 this.user = new UserIdent(values.userName, values.prettyName);
-            break;
+                break;
+
+            case "logout":
+                console.log("API request badge logout", this.MAC);
+                this.user = undefined;
+                break;
 
             default:
         };

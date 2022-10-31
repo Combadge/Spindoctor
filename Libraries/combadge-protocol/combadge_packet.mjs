@@ -222,7 +222,6 @@ function stringByteLength (string) {
     toBuffer (values) {
 
         var hexPackedPacket = VozIdent + values.command + values.firstSetting + values.secondSetting + this.hexSerial + this.MAC + values.data;
-        console.log(hexPackedPacket);
         return Buffer.from(hexPackedPacket, 'hex');
     }
 };

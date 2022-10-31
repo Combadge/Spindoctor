@@ -74,7 +74,6 @@ class UserIdent extends Identifier {
     toBuffer() {
         var userBuffer = super.toBuffer(this._userName);
         var prettyBuffer = super.toBuffer(this._prettyName);
-        console.log(Buffer.concat([userBuffer, prettyBuffer]).toString('hex'));
         return Buffer.concat([userBuffer, prettyBuffer]);
     };
 

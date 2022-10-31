@@ -28,7 +28,6 @@ import { CombadgePacket, Combadge } from './Libraries/combadge-protocol/index.mj
 import { Agent } from './Libraries/robin-agent/index.mjs';
 import { RTPHeader, RTPPacket } from './Libraries/rtp-protocol/index.mjs';
 import express from 'express';
-import bodyparser from 'body-parser';
 
 
 const netAddress = '10.98.2.30';
@@ -147,8 +146,7 @@ updateServer.on('message', (message, clientInfo) => {
 });
 
 var app = new express();
-app.use(bodyparser.json());
-app.use(bodyparser.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.get('/', (request, responder) => {
     return responder.send(["badges"]);
@@ -163,7 +161,18 @@ app.get('/badges/:badgeMAC', (request, responder) => {
 });
 
 app.post('/badges/:badgeMAC/user', (request, responder) => {
-    return responder.send(activeBadges[request.params.badgeMAC].externalCallback("login", request.body));
+    if (!(request.params.badgeMAC in activeBadges)) {
+        responder.status(404);
+        return responder.send(`Badge ${request.params.badgeMAC} is not registered on the server.`);
+    };
+    if (!Object.keys(request.body).length) {
+        return responder.send(activeBadges[request.params.badgeMAC].externalCallback("logout"));
+    } else if (("userName" in request.body) && ("prettyName" in request.body)) {
+        return responder.send(activeBadges[request.params.badgeMAC].externalCallback("login", request.body));
+    } else {
+        responder.status(400);
+        return responder.send("Request body must be either empty or contain string values userName and prettyName.");
+    };
 });
 
 app.listen(apiPort, () =>
