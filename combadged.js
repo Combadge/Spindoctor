@@ -157,10 +157,27 @@ updateServer.on('message', (message, clientInfo) => {
 var app = new express();
 app.use(express.json());
 
+
+/**
+ * API calls for managing the system. Style note: follow whole-parent ordering instead of whole method ordering. E.G.
+ * 
+ * get /
+ * get /badges/
+ * get /badges/badge
+ * del /badges/badge
+ * get /badges/badge/callTarget
+ * pst /badges/badge/callTarget
+ * del /badges/badge/callTarget
+ * pst /badges/badge/user
+ * get /users/
+ */
 app.get('/', (request, responder) => {
-    return responder.send(["badges"]);
+    return responder.send(["badges", "users"]);
 });
 
+/**
+ * This section deals with Combadge calls.
+ */
 app.get('/badges', (request, responder) => {
     return responder.send(Object.keys(activeBadges));
 });
@@ -190,20 +207,45 @@ app.post('/badges/:badgeMAC/callTarget', (request, responder) => {
     return responder.send([true]);
 });
 
+app.delete('/badges/:badgeMAC', (request, responder) => {
+    return responder.send(function () {
+        delete activeBadges[request.params.badgeMAC]
+    });
+});
+
 app.post('/badges/:badgeMAC/user', (request, responder) => {
     if (!(request.params.badgeMAC in activeBadges)) {
         responder.status(404);
         return responder.send(`Badge ${request.params.badgeMAC} is not registered on the server.`);
-    }
-    if (!Object.keys(request.body).length) {
-        return responder.send(activeBadges[request.params.badgeMAC].externalCallback("logout"));
-    } else if (("userName" in request.body) && ("prettyName" in request.body)) {
+    };
+    if (("userName" in request.body) && ("prettyName" in request.body)) {
         return responder.send(activeBadges[request.params.badgeMAC].externalCallback("login", request.body));
     } else {
         responder.status(400);
-        return responder.send("Request body must be either empty or contain string values userName and prettyName.");
-    }
+        return responder.send("Request body must contain string values userName and prettyName.");
+    };
 });
+
+app.delete('/badges/:badgeMAC/user'), (request, responder) => {
+    if (!(request.params.badgeMAC in activeBadges)) {
+        responder.status(404);
+        return responder.send(`Badge ${request.params.badgeMAC} is not registered on the server.`);
+    };
+    return responder.send(activeBadges[request.params.badgeMAC].externalCallback("logout"));
+};
+
+/**
+ * This section deals with User Management calls.
+ */
+app.get('/users', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
+
+app.get('/users/:userName', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
+
+
 
 app.listen(apiPort, () =>
     console.log(`Combadge control REST API now active on TCP port ${apiPort}!`),
