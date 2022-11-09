@@ -22,7 +22,8 @@
  */
 
 
-import alawmulaw from 'alawmulaw'; // For now, move to codec.mjs later.
+import dgram from 'dgram';
+import { Codec } from './codec.mjs';
 
 const Payload = {
     Mulaw8K: 0,
@@ -136,10 +137,9 @@ class RTPHeader {
 
         // var payloadType = Payload[findPayload(payloadType)] // Brutish validation to check supported Payload type. Not sure we're there yet.
         var payloadSize = (packet.slice(lengthOfHeader).length);
-
-        var sequenceNo = parseInt(packet.slice(2,4));
-        var timeStamp = parseInt(packet.slice(4,8));
-        var ssrc = parseInt(packet.slice(8,12));
+        var sequenceNo = packet.slice(2,4).readUInt16BE();
+        var timeStamp = packet.slice(4,8).readUInt16BE();
+        var ssrc = packet.slice(8,12).readUInt16BE();
 
         var header = new RTPHeader(payloadSize, payloadType, ssrc);
         header.forceHeader(sequenceNo, timeStamp);
@@ -217,13 +217,7 @@ class RTPHeader {
  class RTPPacket {
     constructor(header, payload = undefined) {
         this.header = header;
-
-        if (this.header.payloadType == Payload.Mulaw8K) {
-            this._payload = alawmulaw.mulaw.decode(payload); // For now, brute force the transcode, since we know we're working in mulaw.
-        } else {
-            console.log(this.header);
-            throw "Not Mulaw, unsure what to do!";
-        }
+        this._payload = payload;
     }
 
     /**
@@ -275,14 +269,92 @@ class RTPHeader {
 }
 
 /**
- * Temporary class - replace with RTPPacket instances when you work out how.
+ * Should provide a source and sink for RTP Packets. For now, hardcode to the correct values for Combadge audio.
+ * 
+ * Down the line, we should generalise this to allow the library to be reused elsewhere -
+ * (since I wouldn't be writing it if there was another approachable JS RTP library)
  */
-class RTPStream {
-    constructor() {
+class RTPServer {
+    constructor(listenAddress, portNumber, consumer = undefined) {
         this.sampleCount = new Number(160); // At 8 bits/sample, this can be used for both incrementing the timestamp AND counting bytes.
         this.header = new RTPHeader(this.sampleCount);
+        this._consumer = undefined;
+
+        if (portNumber % 2 != 0) {
+            throw `RTP Ports must be even. Odd-numbered ports are reserved for RTCP. Invalid port ${portNumber} passed.`;
+        }
+
+        if (consumer) {
+            this._consumer = consumer;
+        }
+
+        this.udpServer = dgram.createSocket('udp4');
+        this.udpServer.bind(portNumber, listenAddress)
+        this.udpServer.on('listening', () => {
+            const address = this.udpServer.address();
+            console.log(`RTP Server spawned at ${address.address}:${address.port}`);
+        })
+        this.udpServer.on('message', (message, clientInfo) => {  
+            var packet = RTPPacket.from(message);
+            this.receivePacket(packet);
+        })
+
+        /*
+        this.transcoding = true;
+        var floatSamples=Float32Array.from(Float32Array.from(this.recSamples).map(x=>x/0x8000));
+        var newSamples = waveResampler.resample(floatSamples, 8000, 16000); // RETURNS A FLOAT64 NOT AN INT16 READ THE DOCS
+        var samples1616=Int16Array.from(newSamples.map(x => (x>0 ? x*0x7FFF : x*0x8000)));
+        var wav16buffer = new Buffer.from(samples1616.buffer);
+        console.log("Result:", model.stt(wav16buffer));
+        this.transcoding = false;
+        */
     }
 
+    /**
+     * Function to pass in a function to receive audio from the server.
+     */
+    set consumer (consumer) {
+        this._consumer = consumer;
+    }
+
+    get consumer () {
+        return this._consumer;
+    }
+
+    /** Do something with the packet, then forward it to the Consumer if set, or cache it if not. */
+    receivePacket (packet) {
+        var samples = Codec.resampleAudio(packet.payload);
+        this.consumer.receiveSamples(samples);
+    }
+
+    /**
+     * Queue audio to be sent to a remote UDP target. 
+     */
+    queueAudio (audio) {
+
+    }
+
+    /**
+     * Register a recipient to receive audio that's passed to queueAudio - basically, a remote target for an RTP stream.
+     * Address should be one of my fancy IP address objects, which I need to move outside the cccp protocol I think.
+     * 
+     * @param {*} address 
+     */
+    registerRemote (address) {
+
+    }
+
+
+
+    /**
+     * Send audio to a remote device. We'll be explicit about target, rather than just using send() from the responder
+     * because otherwise I can already see an exploit where a snooper sends 0-length packets to ensure they're always the most recent address.
+     * socket.send(msg[, offset, length][, port][, address][, callback])
+     */
+    sendPacket (packet, address, port) {
+        packetData = packet.toBuffer()
+        this.udpServer.send(packetData, 0, packetData.length, port, address)
+    }
 
     /**
      * Return a completed media packet without transcoding.
@@ -308,25 +380,4 @@ class RTPStream {
     }
 }
 
-class MediaQueue {
-    constructor() {
-        this.inQueue = new Array();
-        this.outQueue = new Array();
-    }
-
-    /**
-     * Add a packet to the queue for RTP decoding
-     */
-    addReceivedPacket (packet, callback) {
-        return null;
-    }
-
-    /**
-     * Add a media stream for RTP encoding
-     */
-    addTransmitMedia (samples, callback) {
-        return null;
-    }
-}
-
-export { Payload, RTPHeader, RTPStream, RTPPacket, MediaQueue };
+export { Payload, RTPHeader, RTPPacket, RTPServer };

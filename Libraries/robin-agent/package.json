@@ -1,5 +1,5 @@
 {
-    "name": "robin-agent",
+    "name": "@combadge/robin-agent",
     "version": "0.0.1",
     "type": "module",
     "description": "An interactive voice agent for Spin Doctor.",
