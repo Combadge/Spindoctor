@@ -25,6 +25,7 @@
 
 import dgram from 'dgram';
 import { CombadgePacket, Combadge } from './Libraries/ecma-cccp/index.mjs';
+import { User, Group } from './Models/index.mjs';
 import { Agent } from './Libraries/robin-agent/index.mjs';
 import { RTPHeader, RTPPacket } from './Libraries/ecma-rtp/index.mjs';
 import express from 'express';
