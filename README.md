@@ -56,6 +56,10 @@ It is hoped that someone with an interest in such things might use the Spin Doct
 - "Funny Genie". I'd rather hook in to productive things than make transporter sounds.
 - "Firmware update". Currently the OEM only distributes the badge firmware with the proprietary server software, so there's no legal way for a Spindoctor user to obtain it. So, we're not even going to support it. What firmware you have, is the firmware you work with. If the OEM starts publishing firmware updates online, we will revisit this - but that seems unlikely.
 
+## Coding Conventions and Style Guide ##
+
+If you're interested in submitting a pull request, please read through our relatively inarduous [Coding Conventions document](https://github.com/Combadge/Spindoctor/blob/mantissa/CODINGCONVENTIONS.md).
+
 ## Coffee Sponsorship ##
 
 If you are a company making networked coffee makers and like the idea of the "Coffee - Black." command being implemented for your device? Get in touch. If you're prepared to give a coffee machine (or a couple, if this project takes off with many developers) and a little documentation that might help us write in support for your machine? We're interested.

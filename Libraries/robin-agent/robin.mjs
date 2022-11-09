@@ -20,11 +20,11 @@ import stt from 'stt';
 import vad from 'node-vad';
 import waveResampler from 'wave-resampler';
 
-const modelFile = "./model.tflite"
-const scorerFile = "./huge-vocabulary.scorer"
+const modelFile = "./model.tflite";
+const scorerFile = "./huge-vocabulary.scorer";
 
 const vadTimeOut = 300;
-const vadAggressiveness = vad.Mode.VERY_AGGRESSIVE
+const vadAggressiveness = vad.Mode.VERY_AGGRESSIVE;
 
 
 const vadInstance = new vad(vadAggressiveness);
@@ -43,8 +43,8 @@ console.error('Loaded model.');
  */
 class Agent {
     constructor (callback = undefined) {
-        this.samples = []
-        this.recSamples = []
+        this.samples = [];
+        this.recSamples = [];
         this.transcoding = false;
         this._callback = callback;
     };
@@ -63,23 +63,23 @@ class Agent {
     receiveSamples (samples) {
         if (this.transcoding == false) {
             this.samples.push(...samples);
-        }
+        };
         if (this.samples.length > 50000) {
             this.recSamples = this.samples;
             this.samples = [];
             this.recogniseBatch();
-        }
+        };
         return true;
     };
 
     set callback (callback = undefined) {
         // Future task - verify that callback is either undefined or a function here.
         this._callback = callback;
-    }
+    };
 
     get callback () {
         return this._callback;
-    }
+    };
 };
 
 export { Agent };

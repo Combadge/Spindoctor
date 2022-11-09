@@ -1,18 +1,18 @@
 /**
- * Combadge-protocol, an implementation of an OEM Combadge control protocol for Spin Doctor
+ * ecma-cccp (Communicator Command and Control Protocol), an implementation of an OEM Combadge control protocol for Spin Doctor
  * Copyright (C) 2021-2022 The Combadge Project by mo-g
  *
- * Combadge-protocol is free software: you can redistribute it and/or modify
+ * ecma-cccp is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, version 3 of the License.
  *
- * Combadge-protocol is distributed in the hope that it will be useful,
+ * ecma-cccp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Combadge-protocol.  If not, see <https://www.gnu.org/licenses/>.
+ * along with ecma-cccp.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 
@@ -101,7 +101,7 @@ const VozBSSIDError = 18; // I have no idea why, but it adds
     return output;
 };
 
-function asciiCode (character) { return character.charCodeAt(0); }
+function asciiCode (character) { return character.charCodeAt(0); };
 
 /**
  * Take a string of ASCII values and extract hex form.
@@ -127,13 +127,13 @@ function macAddrToBuffer (macAddress) {
 };
 
 function bufferToBSSID (bssidBuffer) {
-    var bssidArray = bssidBuffer.toString('hex').match( /.{1,2}/g )
+    var bssidArray = bssidBuffer.toString('hex').match( /.{1,2}/g );
     bssidArray[0] = ( parseInt(bssidArray[0], 16) - VozBSSIDError ).toString(16);
     return bssidArray.join( ':' );
 };
 
 function bssidToBuffer (bssid) {
-    var bssidArray = bssid.split(':')
+    var bssidArray = bssid.split(':');
     bssidArray[0] = ( parseInt(bssidArray[0], 16) + VozBSSIDError ).toString(16);
     return Buffer.from(bssid.join(''), 'hex');
 };
@@ -152,8 +152,8 @@ function stringByteLength (string) {
     _serial = new String();
 
     constructor (macAddress) {
-        this.MAC = macAddress
-    }
+        this.MAC = macAddress;
+    };
 
     set serial (serialValue) {
         this._serial = serialValue.toString(16).padStart(8, '0');
@@ -339,9 +339,9 @@ class Ack extends CombadgePacket {
             firstSetting: EmptySetting,
             secondSetting: audioProtocol,
             data: data
-        }
-        return super.toBuffer(values)
-    }
+        };
+        return super.toBuffer(values);
+    };
 };
 
 /**
@@ -364,8 +364,8 @@ class Ack extends CombadgePacket {
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: "".padEnd(20,"04")
-        }
-        return super.toBuffer(values)
+        };
+        return super.toBuffer(values);
     };
 };
 
@@ -389,8 +389,8 @@ class BadgeSettings extends CombadgePacket {
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: '40bb8cf3'.padEnd(20,"04")
-        }
-        return super.toBuffer(values)
+        };
+        return super.toBuffer(values);
     };
 };
 
@@ -499,8 +499,8 @@ class BadgeLogs extends CombadgePacket {
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: data
-        }
-        return super.toBuffer(values)
+        };
+        return super.toBuffer(values);
     };
 };
 
@@ -525,8 +525,8 @@ class CallRTP extends CombadgePacket {
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: `000100010001${ipDecToHex(this.targetAddress)}${parseInt(this.targetPort).toString(16)}000100`
-        }
-        return super.toBuffer(values)
+        };
+        return super.toBuffer(values);
     };
 };  
 
@@ -545,7 +545,7 @@ class HangUp extends CombadgePacket {
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: ""
-        }
+        };
         return super.toBuffer(values);
     };
 };
@@ -587,7 +587,7 @@ class LogOut extends CombadgePacket {
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: ""
-        }
+        };
         return super.toBuffer(values);
     };
 };
@@ -608,14 +608,14 @@ class PromptText extends CombadgePacket {
     };
 
     toBuffer () {
-        var promptText = "Prompt: " + this.prompt
+        var promptText = "Prompt: " + this.prompt;
         var promptString = unicodeToHex(promptText);
         var values = {
             command: VozServerCommands.TriggerBadgePrompt,
             firstSetting: EmptySetting,
             secondSetting: EmptySetting,
             data: `${stringByteLength(promptString)}${promptString}`
-        }
+        };
         return super.toBuffer(values);
     };
 };

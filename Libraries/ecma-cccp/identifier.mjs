@@ -1,18 +1,18 @@
 /**
- * Combadge-protocol, an implementation of an OEM Combadge control protocol for Spin Doctor
+ * ecma-cccp (Communicator Command and Control Protocol), an implementation of an OEM Combadge control protocol for Spin Doctor
  * Copyright (C) 2021-2022 The Combadge Project by mo-g
  *
- * Combadge-protocol is free software: you can redistribute it and/or modify
+ * ecma-cccp is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, version 3 of the License.
  *
- * Combadge-protocol is distributed in the hope that it will be useful,
+ * ecma-cccp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Combadge-protocol.  If not, see <https://www.gnu.org/licenses/>.
+ * along with ecma-cccp.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 
@@ -79,4 +79,4 @@ class UserIdent extends Identifier {
 
 };
 
-export { Identifier, UserIdent }
+export { Identifier, UserIdent };

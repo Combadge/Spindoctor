@@ -1,12 +1,12 @@
 {
-    "name": "rtp-protocol",
-    "version": "0.0.2",
+    "name": "ecma-cccp",
+    "version": "0.0.6",
     "type": "module",
-    "description": "An RTP Library for Spin Doctor",
+    "description": "Communicator Command and Control Protocol, an implementation of an OEM Combadge control protocol for Spin Doctor",
     "keywords": [
-      "rtp",
-      "combadge",
-      "rtp protocol"
+      "Communications Badge",
+      "Combadge",
+      "Combadge Protocol"
     ],
     "main": "index.mjs",
     "scripts": {

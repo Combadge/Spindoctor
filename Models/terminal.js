@@ -34,9 +34,11 @@
  * private space will be defaulted to if the user's communicator is connected
  * to the AP in that space.
  */
- class Terminal {
+
+
+class Terminal {
     constructor(MAC, IP) {
-    this.IP = IP;
-    this.MAC = MAC;
+        this.IP = IP;
+        this.MAC = MAC;
     };
 };
