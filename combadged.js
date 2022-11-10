@@ -160,6 +160,18 @@ app.get('/badges/:badgeMAC', (request, responder) => {
     return responder.send(activeBadges[request.params.badgeMAC]);
 });
 
+app.post('/badges/:badgeMAC/callTarget', (request, responder) => {
+    if ("targetMAC" in request.body) {
+        var initiator = activeBadges[request.params.badgeMAC];
+        var target = activeBadges[request.body["targetMAC"]];
+        console.log(`${target.IP} calling ${initiator.IP}`);
+        initiator.callTarget(target.IP, 5200);
+        target.callTarget(initiator.IP, 5200);
+    };
+
+    return responder.send([true]);
+});
+
 app.post('/badges/:badgeMAC/user', (request, responder) => {
     if (!(request.params.badgeMAC in activeBadges)) {
         responder.status(404);

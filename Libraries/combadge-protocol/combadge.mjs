@@ -270,6 +270,17 @@ class Combadge{
     };
 
     /**
+     * Call a specific RTP Target.
+     */
+    callTarget (address, port) {
+        this.incrementSerial();
+        var callAgent = new packets.CallRTP(this.MAC, {address: address, port: port});
+        callAgent.serial = this.serverSerial;
+        this.sendCommandToBadge(callAgent);
+        this.callState = "Active";
+    };
+
+    /**
      * Callback for an Agent (or other software) to instruct the Combadge
      * instance on what to do.
      * 

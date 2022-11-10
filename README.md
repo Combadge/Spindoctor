@@ -12,9 +12,10 @@ The application is single-licenced under the Affero GPL v3.0, a copyleft licence
 
 ## Current State ##
 
-- If you manually configure a B2000, B3000 or B3000n badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably get some really bad speech recognition output. Pretty good for a hobby project! If you have multiple badges you should also be able to manually trigger a badge-badge call through the web API.
+- If you manually configure a B2000, B3000 or B3000n badge of the right firmware version using the on-device configuration menu, and run this software on a server connected to the right IP with the right ssid and password... you can probably get some really bad speech recognition output. Pretty good for a hobby project!
 - The controller code will handle the existence of multiple badges, and will transcribe each stream fully independently. So far, the transcription is terrible and nothing is done with it - but it is technically functional.
 - There is a rudimentary self-describing API at port 1031. You can send the json `{"userName":"u-jdax","prettyName":"Jadzia Dax"}` or similar to the `/badge/:macaddress/user` endpoint on the api to change user on a badge. Sending an empty body (as in, `{}`) to the same endpoint will log out the badge. As an example: `curl -H "Content-Type: application/json" -d '{"userName":"u-wsomogh","prettyName":"Worf, Son of Mogh"}'  http://servername:1031/badges/0009efabcdef/user`
+- The API also allows you to make badge to badge calls, currently only between pairs of badges (multicast grouping is not supported). As an example `curl -H "Content-Type: application/json" -d '{"targetMAC":"0009effedcba"}' http://servername:1031/badges/0009efabcdef/callTarget`. The code is *very* oversimplified, and the API is likely to change in short order.
 - Should work on Node 12, 14, 16? I've not been too brave. Doesn't work on node 18 due to STT issues.
 - Now requires AVX! THANKS, tflite. You'll run on a Pi 02, but not a brand new Atom or a Westmere Xeon... P.S. You can manually compile tflite, but blegh.
 
