@@ -163,35 +163,46 @@ app.use(express.json());
  * API calls for managing the system. Style note: follow whole-parent ordering instead of whole method ordering. E.G.
  * 
  * get /
- * get /badges/
- * get /badges/badge
- * del /badges/badge
- * get /badges/badge/callTarget
- * pst /badges/badge/callTarget
- * del /badges/badge/callTarget
- * pst /badges/badge/user
+ * get /communicators/
+ * get /communicators/badge
+ * del /communicators/badge
+ * get /communicators/badge/callTarget
+ * pst /communicators/badge/callTarget
+ * del /communicators/badge/callTarget
+ * pst /communicators/badge/user
  * get /users/
  */
 app.get('/', (request, responder) => {
-    return responder.send(["badges", "users"]);
+    return responder.send(["badges", "groups", "terminals", "users"]);
 });
 
 /**
  * This section deals with Combadge calls.
  */
-app.get('/badges', (request, responder) => {
+app.get('/communicators', (request, responder) => {
     return responder.send(Object.keys(activeBadges));
 });
 
-app.get('/badges/:badgeMAC', (request, responder) => {
-    return responder.send(activeBadges[request.params.badgeMAC]);
+app.get('/communicators/:communicatorMAC', (request, responder) => {
+    return responder.send(activeBadges[request.params.communicatorMAC]);
 });
 
-app.post('/badges/:badgeMAC/callTarget', (request, responder) => {
-    if (!(request.params.badgeMAC in activeBadges)) {
+app.delete('/communicators/:communicatorMAC', (request, responder) => {
+    return responder.send(function () {
+        delete activeBadges[request.params.communicatorMAC]
+    });
+});
+
+app.post('/communicators/:communicatorMAC/callTarget', (request, responder) => {
+    if (!(request.params.communicatorMAC in activeBadges)) {
         responder.status(404);
+<<<<<<< HEAD
         return responder.send(`Badge ${request.params.badgeMAC} is not registered on the server.`);
     }
+=======
+        return responder.send(`Badge ${request.params.communicatorMAC} is not registered on the server.`);
+    };
+>>>>>>> 4cc513d (Bit of structuring, plus genericising "communicator" instead of "badge".)
     if (!("targetMAC" in request.body)) {
         responder.status(400);
         return responder.send("Request body must be either empty or contain string values userName and prettyName.");
@@ -199,7 +210,7 @@ app.post('/badges/:badgeMAC/callTarget', (request, responder) => {
         responder.status(404);
         return responder.send(`Badge ${request.body["targetMAC"]} is not registered on the server.`);
     } else {
-        var initiator = activeBadges[request.params.badgeMAC];
+        var initiator = activeBadges[request.params.communicatorMAC];
         var target = activeBadges[request.body["targetMAC"]];
         initiator.callRTP(target.IP, 5200);
         target.callRTP(initiator.IP, 5200);
@@ -208,32 +219,46 @@ app.post('/badges/:badgeMAC/callTarget', (request, responder) => {
     return responder.send([true]);
 });
 
-app.delete('/badges/:badgeMAC', (request, responder) => {
-    return responder.send(function () {
-        delete activeBadges[request.params.badgeMAC]
-    });
-});
-
-app.post('/badges/:badgeMAC/user', (request, responder) => {
-    if (!(request.params.badgeMAC in activeBadges)) {
+app.post('/communicators/:communicatorMAC/user', (request, responder) => {
+    if (!(request.params.communicatorMAC in activeBadges)) {
         responder.status(404);
-        return responder.send(`Badge ${request.params.badgeMAC} is not registered on the server.`);
+        return responder.send(`Badge ${request.params.communicatorMAC} is not registered on the server.`);
     };
     if (("userName" in request.body) && ("prettyName" in request.body)) {
-        return responder.send(activeBadges[request.params.badgeMAC].externalCallback("login", request.body));
+        return responder.send(activeBadges[request.params.communicatorMAC].externalCallback("login", request.body));
     } else {
         responder.status(400);
         return responder.send("Request body must contain string values userName and prettyName.");
     };
 });
 
-app.delete('/badges/:badgeMAC/user'), (request, responder) => {
-    if (!(request.params.badgeMAC in activeBadges)) {
+app.delete('/communicators/:communicatorMAC/user'), (request, responder) => {
+    if (!(request.params.communicatorMAC in activeBadges)) {
         responder.status(404);
-        return responder.send(`Badge ${request.params.badgeMAC} is not registered on the server.`);
+        return responder.send(`Badge ${request.params.communicatorMAC} is not registered on the server.`);
     };
-    return responder.send(activeBadges[request.params.badgeMAC].externalCallback("logout"));
+    return responder.send(activeBadges[request.params.communicatorMAC].externalCallback("logout"));
 };
+
+/**
+ * This section deals with Group Management calls.
+ */
+app.get('/groups', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
+
+app.get('/groups/:userName', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
+
+app.post('/groups/:groupName', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
+
+app.delete('groups/:groupName', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
+
 
 /**
  * This section deals with User Management calls.
@@ -246,7 +271,34 @@ app.get('/users/:userName', (request, responder) => {
     return responder.send(["Not Implemented"]);
 });
 
+app.post('/users/:userName', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
 
+app.delete('/users/:userName', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
+
+/**
+ * Maybe return a 300-series temporary redirect here, to point people at the right badge object?
+ */
+app.get('/users/:userName/communicators/:communicatorMAC', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
+
+/**
+ * How do you refer an object to another object in a REST api? Need to research correct style.
+ */
+app.post('/users/:userName/communicators/:communicatorMAC', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
+
+/**
+ * This at least is relatively straightforward - remove the MAC from the user object and logout the corresponding devices.
+ */
+app.delete('/users/:userName/communicators/:communicatorMAC', (request, responder) => {
+    return responder.send(["Not Implemented"]);
+});
 
 app.listen(apiPort, () =>
     console.log(`Combadge control REST API now active on TCP port ${apiPort}!`),

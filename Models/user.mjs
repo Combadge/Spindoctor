@@ -39,19 +39,19 @@
     userName: "u-fallbackuser", // Globally unique ID
     fullName: new UserFullName(foreName = "Fallback", familyName = "User", nickName = "Fallback User"),
     ipaPronunciation: "fɔːlbæk ˈjuːzə", // Not currently in use for STT or TTS but worth adding.
-    associatedGroups: [],
+    groups: [],
 
-    assignedDevices: ["ba:dg:em:ac:ad:dr"], // Optional, for autologin/whitelisting
-    personalTerminals: ["te:rm:in:al:ma:cs"] // Being vidcom terminals that can be used to make video calls.
+    communicators: ["ba:dg:em:ac:ad:dr"], // Optional, for autologin/whitelisting
+    terminals: ["te:rm:in:al:ma:cs"] // Being vidcom terminals that can be used to make video calls.
 };
 
 groupTemplate = {
     groupName: "g-allhands",
     nickName: "All Hands",
     ipaPronunciation: "ɔːl hændz", // Not currently in use for STT or TTS but worth adding.
-    associatedUsers: [],
+    users: [],
 
-    assignedAddress: "Placeholder for multicast IPAddress Object"
+    address: "Placeholder for multicast IPAddress Object"
 };
 
 
