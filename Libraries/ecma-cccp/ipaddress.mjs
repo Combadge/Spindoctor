@@ -1,18 +1,18 @@
 /**
- * Combadge-protocol, an implementation of an OEM Combadge control protocol for Spin Doctor
+ * ecma-cccp (Communicator Command and Control Protocol), an implementation of an OEM Combadge control protocol for Spin Doctor
  * Copyright (C) 2021-2022 The Combadge Project by mo-g
  *
- * Combadge-protocol is free software: you can redistribute it and/or modify
+ * ecma-cccp is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, version 3 of the License.
  *
- * Combadge-protocol is distributed in the hope that it will be useful,
+ * ecma-cccp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Combadge-protocol.  If not, see <https://www.gnu.org/licenses/>.
+ * along with ecma-cccp.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 
@@ -49,7 +49,7 @@ class IPAddress {
                 };
 
             default:
-                throw "Not a string or a buffer, can't parse as IP address."
+                throw "Not a string or a buffer, can't parse as IP address.";
         };
     };
 
@@ -114,11 +114,11 @@ class IPAddress {
             if (!!this._subnet) {
                 formatted.concat("/", this.subnet.toString(10));
             } else {
-                throw "CIDR requested but subnet unset!"
+                throw "CIDR requested but subnet unset!";
             };
         };
 
-        return formatted
+        return formatted;
     };
     
     /**
@@ -156,7 +156,7 @@ class IPv4Address extends IPAddress {
                 };
 
             default:
-                throw "Not a string or a buffer, can't parse as IP address."
+                throw "Not a string or a buffer, can't parse as IP address.";
         };
     };
 
@@ -233,7 +233,7 @@ class IPv6Address extends IPAddress {
                 };
 
             default:
-                throw "Not a string or a buffer, can't parse as IP address."
+                throw "Not a string or a buffer, can't parse as IP address.";
         };
     };
 

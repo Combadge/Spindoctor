@@ -28,7 +28,10 @@
  *   format used by the text-to-speech engine selected in that implementation.
  *   The default position is to trust the TTSE, but this permits override.
  */
- class Contact {
+
+
+class Contact {
     constructor() {
+        
     };
 };

@@ -24,9 +24,9 @@
 
 
 import dgram from 'dgram';
-import { CombadgePacket, Combadge } from './Libraries/combadge-protocol/index.mjs';
+import { CombadgePacket, Combadge } from './Libraries/ecma-cccp/index.mjs';
 import { Agent } from './Libraries/robin-agent/index.mjs';
-import { RTPHeader, RTPPacket } from './Libraries/rtp-protocol/index.mjs';
+import { RTPHeader, RTPPacket } from './Libraries/ecma-rtp/index.mjs';
 import express from 'express';
 
 
@@ -55,6 +55,14 @@ class AgentManager {
         rtpPort.on('listening', () => {
             const address = rtpPort.address();
             console.log(`Agent worker spawned at ${address.address}:${address.port}`);
+            // Having written this, I think this handler stuff needs to be moved to the RT library.
+            agent.audioResponder = function (audioBuffer) {
+                var rtpPayload = magicTranscode(audioBuffer);
+                var rtpHeader = new RTPHeader(rtpPayload.length);
+                var rtpPacket = new RTPPacket(rtpHeader, rtpPayload);
+                
+                return rtpPort.send(packet);
+            };
         });
         rtpPort.on('message', (message, clientInfo) => {  
             var rtpPacket = RTPPacket.from(message);
@@ -124,6 +132,7 @@ for (let rtpPort = rtpPortRangeStart; rtpPort < (rtpPortRangeStart + rtpPoolInit
 controlServer.on('message', (message, clientInfo) => {  
     var address = clientInfo.address; var port = clientInfo.port;
     var packet = CombadgePacket.from(message)
+    // console.log(message.toString('hex')); - Useful debug step - uncomment to dump the hex stream of incoming packets to console.
     if (packet == undefined) {
         console.log(`Received datagram from badge at ${address}:${port}. Ignoring faulty or incompatible packet.`);
         return false;
@@ -161,12 +170,21 @@ app.get('/badges/:badgeMAC', (request, responder) => {
 });
 
 app.post('/badges/:badgeMAC/callTarget', (request, responder) => {
-    if ("targetMAC" in request.body) {
+    if (!(request.params.badgeMAC in activeBadges)) {
+        responder.status(404);
+        return responder.send(`Badge ${request.params.badgeMAC} is not registered on the server.`);
+    };
+    if (!("targetMAC" in request.body)) {
+        responder.status(400);
+        return responder.send("Request body must be either empty or contain string values userName and prettyName.");
+    } else if (!(request.body["targetMAC"] in activeBadges)) {
+        responder.status(404);
+        return responder.send(`Badge ${request.body["targetMAC"]} is not registered on the server.`);
+    } else {
         var initiator = activeBadges[request.params.badgeMAC];
         var target = activeBadges[request.body["targetMAC"]];
-        console.log(`${target.IP} calling ${initiator.IP}`);
-        initiator.callTarget(target.IP, 5200);
-        target.callTarget(initiator.IP, 5200);
+        initiator.callRTP(target.IP, 5200);
+        target.callRTP(initiator.IP, 5200);
     };
 
     return responder.send([true]);

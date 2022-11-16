@@ -1,18 +1,18 @@
 /**
- * Combadge-protocol, an implementation of an OEM Combadge control protocol for Spin Doctor
+ * ecma-cccp (Communicator Command and Control Protocol), an implementation of an OEM Combadge control protocol for Spin Doctor
  * Copyright (C) 2021-2022 The Combadge Project by mo-g
  *
- * Combadge-protocol is free software: you can redistribute it and/or modify
+ * ecma-cccp is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, version 3 of the License.
  *
- * Combadge-protocol is distributed in the hope that it will be useful,
+ * ecma-cccp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Combadge-protocol.  If not, see <https://www.gnu.org/licenses/>.
+ * along with ecma-cccp.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 
@@ -104,7 +104,7 @@ class Combadge{
         } else {
             this._user = undefined;
             this.loginState = false;
-        }
+        };
 
         console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet}`);
 
@@ -209,18 +209,13 @@ class Combadge{
                         switch(packet.callState) {
                             case false:
                                 this.incrementSerial();
-        
                                 var setTargetToAgent = new packets.DisplayTarget(this.MAC);
                                 setTargetToAgent.serial = this.serverSerial;
                                 this.sendCommandToBadge(setTargetToAgent);
                                 break;
         
                             case true:
-                                this.incrementSerial();
-                                var callAgent = new packets.CallRTP(this.MAC, {address: this.UDPServer.address().address, port: this.agentPort});
-                                callAgent.serial = this.serverSerial;
-                                this.sendCommandToBadge(callAgent);
-                                this.callState = "Active";
+                                this.callRTP(this.UDPServer.address().address, this.agentPort);
 
                                 /**this.incrementSerial();
                                 var goodEvening = new packets.PromptText(this.MAC, {prompt: "genie"})
@@ -231,16 +226,13 @@ class Combadge{
                         break;
                     
                     case "Active":
-                        this.incrementSerial();
-                        var hangUp = new packets.HangUp(this.MAC);
-                        hangUp.serial = this.serverSerial;
-                        this.sendCommandToBadge(hangUp); 
-                        this.callState = "Ended";
+                        this.hangUp();
                         break;
 
                     case "Ended":
                         this.callState = "Idle";
-                }
+                        break;
+                };
             
 
             case "ErBits":
@@ -272,12 +264,20 @@ class Combadge{
     /**
      * Call a specific RTP Target.
      */
-    callTarget (address, port) {
+    callRTP (address, port) {
         this.incrementSerial();
-        var callAgent = new packets.CallRTP(this.MAC, {address: address, port: port});
-        callAgent.serial = this.serverSerial;
-        this.sendCommandToBadge(callAgent);
+        var callRTP = new packets.CallRTP(this.MAC, {address: address, port: port});
+        callRTP.serial = this.serverSerial;
+        this.sendCommandToBadge(callRTP);
         this.callState = "Active";
+    };
+
+    hangUp () {
+        this.incrementSerial();
+        var hangUp = new packets.HangUp(this.MAC);
+        hangUp.serial = this.serverSerial;
+        this.sendCommandToBadge(hangUp); 
+        this.callState = "Ended";
     };
 
     /**
@@ -297,6 +297,10 @@ class Combadge{
                 console.log("API request badge logout", this.MAC);
                 this.user = undefined;
                 break;
+
+            case "callTarget":
+                
+                //console.log(`API requested call between ${this.MAC} and ${}`);
 
             default:
         };

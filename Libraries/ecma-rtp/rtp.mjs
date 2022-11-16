@@ -1,19 +1,20 @@
 /**
- * rtp-protocol, an RTP Library for Spin Doctor
+ * ecma-rtp, an RTP Library for Spin Doctor
  * Copyright (C) 2021-2022 The Combadge Project by mo-g
  * 
- * rtp-protocol is free software: you can redistribute it and/or modify
+ * ecma-rtp is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, version 3 of the License.
  * 
- * rtp-protocol is distributed in the hope that it will be useful,
+ * ecma-rtp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with rtp-protocol.  If not, see <https://www.gnu.org/licenses/>.
+ * along with ecma-rtp.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 
 /**
  * Specify the Payload type of this audio stream. Current options are:
@@ -21,17 +22,17 @@
  */
 
 
- import alawmulaw from 'alawmulaw'; // For now, move to codec.mjs later.
+import alawmulaw from 'alawmulaw'; // For now, move to codec.mjs later.
 
 const Payload = {
     Mulaw8K: 0,
     Alaw8K: 8,
     G7228K: 9,
     G7298K: 18
-}
+};
 
 function findPayload(payloadNumber) {
-    return Object.keys(Payload).find(key => Payload[key] === payloadNumber)
+    return Object.keys(Payload).find(key => Payload[key] === payloadNumber);
 };
 
 function significantBits (integerValue, bitLength) {
@@ -44,7 +45,7 @@ function booleanBits (booleanValue, bitLength = 1) {
 
 function bufferBits(buffer) {
     return [...buffer].map((b) => b.toString(2).padStart(8, '0')).join('');
-}
+};
 
 function binstringToHex(binstring, wordSize = 8) {
     const wordCount = Math.ceil(binstring.length / wordSize);
@@ -58,7 +59,7 @@ function binstringToHex(binstring, wordSize = 8) {
     var hexValue = new String();
     bytes.forEach(function (item, index) {
         hexValue += item.toString(16);
-      });
+    });
 
     return hexValue;
   }
@@ -86,10 +87,10 @@ class RTPHeader {
         this.payloadType = payloadType;
 
         // Bytes 3-4: Serial Number - Randomise initial for future SRTP support. Cap at 25% of range.
-        this.sequenceNo = Math.floor(Math.random() * (65534/4))
+        this.sequenceNo = Math.floor(Math.random() * (65534/4));
 
         // Bytes 5-8: Timestamp - Cap at 25% of range.
-        this.timeStamp = Math.floor(Math.random() * (2147483647/4))
+        this.timeStamp = Math.floor(Math.random() * (2147483647/4));
 
         // Bytes 9-12: SSRC - Imitate OEM Server to be safe.
         this.ssrc = ssrc; // If not set manually, use OEM default for server packet.
@@ -113,15 +114,15 @@ class RTPHeader {
             throw "Not an RTP v2 Packet!";
         };
 
-        var padding = !!+rtpFormat.slice(2,3)
+        var padding = !!+rtpFormat.slice(2,3);
         if (!!padding) {
             console.log("RTP Packet is padded, unsupported case!")
         };
 
-        var extension = !!+rtpFormat.slice(3,4)
-        var csrcCount = parseInt(rtpFormat.slice(4,8), 2)
+        var extension = !!+rtpFormat.slice(3,4);
+        var csrcCount = parseInt(rtpFormat.slice(4,8), 2);
         if (extension + csrcCount !== 0) {
-            throw "Extension/CSRC present, unsupported header size!"
+            throw "Extension/CSRC present, unsupported header size!";
         } else {
             var lengthOfHeader = 12; // For now, assume a minimalist 12 byte header. We should handle extensions and multiple csrcs but it's not necessary yet.
         };
@@ -129,7 +130,7 @@ class RTPHeader {
         var payloadFormat = bufferBits(packet.slice(1,2));
         var marker = !!+payloadFormat.slice(0,1);
         if (!!marker) {
-            console.log("Payload Marker bit set. I have no idea what to do with that.")
+            console.log("Payload Marker bit set. I have no idea what to do with that.");
         };
         var payloadType = parseInt(payloadFormat.slice(1,8), 2);
 
@@ -146,11 +147,13 @@ class RTPHeader {
     };
 
     /**
-     * Get the current header value. Return as hex bytes so it can be prepended to a hex or buffer audio stream easily.
+     * Return header as buffer so it can be prepended to an audio stream.
+     * 
+     * Currently returns hex string - need to fix that!
      */
-    getHeader() {
+    toBuffer () {
         // Byte 1 - RTP Format
-        var version = significantBits(this.version, 2)
+        var version = significantBits(this.version, 2);
         var headerPadding = booleanBits(this.headerPadding);
         var extension = booleanBits(this.extension);
         var csrcCount = significantBits(this.csrcCount, 4)
@@ -161,7 +164,7 @@ class RTPHeader {
         var marker = booleanBits(this.marker);
         var payloadType = significantBits(this.payloadType, 7);
         var payloadFormat = marker + payloadType;
-        console.log(payloadFormat.length, payloadFormat) ///////////////////////////////////////////////////////////////
+        console.log(payloadFormat.length, payloadFormat); ///////////////////////////////////////////////////////////////
 
         // Bytes 3-4: Serial Number - Randomise initial for future SRTP support. Cap at 25% of range.
         var sequenceNo = significantBits(this.sequenceNo, 16);
@@ -179,6 +182,13 @@ class RTPHeader {
         var combinedHeader = binstringToHex(rtpFormat + payloadFormat + sequenceNo + timeStamp + ssrc);
         console.log(combinedHeader.length, combinedHeader); ///////////////////////////////////////////////////////////////
         return combinedHeader;
+    };
+
+    /**
+     * Represent header in human-readable format for display and logging.
+     */
+    toString () {
+        return "RTPHeader.toString() not implemented.";
     };
 
     /**
@@ -205,11 +215,11 @@ class RTPHeader {
  * Again - values specifically hardcoded for Spin Doctor.
  */
  class RTPPacket {
-    constructor(header, payload) {
+    constructor(header, payload = undefined) {
         this.header = header;
 
         if (this.header.payloadType == Payload.Mulaw8K) {
-            this.payload = alawmulaw.mulaw.decode(payload); // For now, brute force the transcode, since we know we're working in mulaw.
+            this._payload = alawmulaw.mulaw.decode(payload); // For now, brute force the transcode, since we know we're working in mulaw.
         } else {
             console.log(this.header);
             throw "Not Mulaw, unsure what to do!";
@@ -228,6 +238,14 @@ class RTPHeader {
         return new RTPPacket(header, payload);
     };
 
+    set payload (payload) {
+
+    };
+
+    get payload () {
+        return this._payload;
+    };
+
     /**
      * Transcode media to desired codec. Will presumably also need to handle
      * sample rate conversion? Don't think we can alter interval sizes here.
@@ -242,8 +260,19 @@ class RTPHeader {
     /**
      * Return the packet, ready to send.
      */
-    
-}
+    toBuffer() {
+
+    };
+
+    /**
+     * Represent the packet as a string form. Needs work.
+     */
+    toString() {
+        var headerString = this.header.toString();
+
+        return headerString, "RTPPacket.toString() not implemented.";
+    };
+};
 
 /**
  * Temporary class - replace with RTPPacket instances when you work out how.
@@ -252,7 +281,7 @@ class RTPStream {
     constructor() {
         this.sampleCount = new Number(160); // At 8 bits/sample, this can be used for both incrementing the timestamp AND counting bytes.
         this.header = new RTPHeader(this.sampleCount);
-    }
+    };
 
 
     /**
@@ -264,7 +293,7 @@ class RTPStream {
         var completeBuffer = Buffer.concat([headerBuffer, bytes]);
         this.header.updateHeader();
         return completeBuffer;
-    }
+    };
 
     /**
      * Return a decoded media array without transcoding.
@@ -276,8 +305,8 @@ class RTPStream {
         var headerValues = this.header.decode(headerSection);
 
         return mediaSection;
-    }
-}
+    };
+};
 
 class MediaQueue {
     constructor() {
@@ -290,14 +319,14 @@ class MediaQueue {
      */
     addReceivedPacket (packet, callback) {
         return null;
-    }
+    };
 
     /**
      * Add a media stream for RTP encoding
      */
     addTransmitMedia (samples, callback) {
         return null;
-    }
-}
+    };
+};
 
 export { Payload, RTPHeader, RTPStream, RTPPacket, MediaQueue };

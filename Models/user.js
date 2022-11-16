@@ -34,7 +34,10 @@
  *   E.G. Your pharmacy, your work. This allows shorthands that wouldn't make
  *   sense when used by other people.
  */
+
+
 class User {
     constructor() {
+
     };
 };
