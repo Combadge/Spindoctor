@@ -26,69 +26,69 @@ class CallTarget {
     constructor (address = undefined, port = undefined,) {
         this.address = address;
         this.port = port;
-    };
+    }
 
     get address () {
         return this._address;
-    };
+    }
 
     set address (address) {
         if (!(address instanceof IPAddress)) {
             throw "Not an IPAddress object."
         } else {
             this._address = address;
-        };
-    };
+        }
+    }
 
     set port (port) {
         if (!(port instanceof Port)) {
             throw "Not a Port object."
         } else {
             this._port = port;
-        };
-    };
+        }
+    }
 
     get port () {
         return this._port;
-    };
+    }
 
     set identifier (identifier) {
         if (!(identifier instanceof Identifier)) {
             throw "Not an IPAddress object."
         } else {
             this._identifier = identifier;
-        };
+        }
 
-    };
+    }
 
     get identifier() {
         return this._identifier;
-    };
+    }
 
     toString () {
         return ``;
-    };
+    }
 
     toBuffer () {
         return Buffer.concat([this._targetIP, this._port]);
-    };
-};
+    }
+}
 
 /**
  * Represent a multicast group for a number of users to join in on.
  */
 class CallGroup extends CallTarget {
     constructor () {
-
-    };
+        super();
+    }
 
     set IP (address) {
         if (address.multicast != true) {
             throw "Cannot assign a unicast IP to a CallGroup. Must be Multicast."
-        };
+        }
 
         super.IP = address;
-    };
-};
+    }
+}
 
 export { CallTarget, CallGroup };

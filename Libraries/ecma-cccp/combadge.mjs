@@ -86,7 +86,7 @@ class Combadge{
         this.MAC = MAC;
         if(packet.constructor.name !== "Ping") {
             console.log("Invalid packet passed to Combadge Constructor.");
-        };
+        }
 
         this.UDPServer = UDPServer;
         this.sourceUDPPort = sourceUDPPort;
@@ -104,7 +104,7 @@ class Combadge{
         } else {
             this._user = undefined;
             this.loginState = false;
-        };
+        }
 
         console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet}`);
 
@@ -117,19 +117,19 @@ class Combadge{
         this.sendCommandToBadge(settings);
 
         this.callState = "Idle";
-    };
+    }
 
     get agentPort () {
         return this._agentPort;
-    };
+    }
 
     set agentPort (port) {
         this._agentPort = port;
-    };
+    }
 
     get user () {
         return this._user;
-    };
+    }
 
     set user (ident = undefined) {
         this._user = ident;
@@ -138,10 +138,10 @@ class Combadge{
             var action = new packets.LogIn(this.MAC, this._user);
         } else {
             var action = new packets.LogOut(this.MAC);
-        };
+        }
         action.serial = this.serverSerial;
         this.sendCommandToBadge(action);
-    };
+    }
 
     /**
      * Supercedes the Object() toString() function, allowing us to define how a Combadge instance appears in text.
@@ -150,7 +150,7 @@ class Combadge{
      */
     toString () {
         return `Combadge ${this.MAC} is hosting user ${this._user} at location ${this.accessPoint}`;
-    };
+    }
 
     /**
      * Used by JSON.Stringify() to represent the class in json format - mainly in our case for API use,
@@ -168,12 +168,12 @@ class Combadge{
         state.status = this.callState;
         state.callTarget = null;
         return state;
-    };
+    }
     
     sendCommandToBadge (responsePacket) {
         console.log(`${this.MAC} ${this.getUserPrettyName()}: TX [${responsePacket.serial}] ${responsePacket.constructor.name} ${responsePacket}`);
         this.UDPServer.send(responsePacket.toBuffer(), this.sourceUDPPort, this.IP);
-    };
+    }
 
     packetSorter (packet) {
         console.log(`${this.MAC} ${this.getUserPrettyName()}: RX [${packet.serial}] ${packet.constructor.name} ${packet}`);
@@ -183,13 +183,13 @@ class Combadge{
             var blankAck = new packets.Ack(this.MAC);
             blankAck.serial = this.badgeSerial;
             this.sendCommandToBadge(blankAck); 
-        };  
+        }  
 
         switch(packet.constructor.name) {
             case "Ping":
                 if (!(packet.userName == undefined)) {
                     this.loginState = true;
-                };
+                }
 
                 if (this.accessPoint !== packet.accessPoint) {
                     this.accessPoint = packet.accessPoint;
@@ -198,7 +198,7 @@ class Combadge{
                     // Send badge new AP pretty name.
                 } else if (!this.loginState) {
                     this.loginState == false;
-                };
+                }
 
                 // If AP has not changed, do nothing.
                 break;
@@ -222,7 +222,7 @@ class Combadge{
                                 goodEvening.serial = this.serverSerial;
                                 this.sendCommandToBadge(goodEvening);**/
                                 break;
-                        };
+                        }
                         break;
                     
                     case "Active":
@@ -232,7 +232,10 @@ class Combadge{
                     case "Ended":
                         this.callState = "Idle";
                         break;
-                };
+
+                    default:
+                        throw "Invalid call state!";
+                }
             
 
             case "ErBits":
@@ -242,8 +245,8 @@ class Combadge{
                 break;
 
             default:
-        };
-    };
+        }
+    }
 
     /**
      * Provide the name of the current logged in user.
@@ -251,7 +254,7 @@ class Combadge{
      getUserPrettyName () {
         //var user = this.User;
         return "Inactive";
-    };
+    }
  
 
     /**
@@ -259,7 +262,7 @@ class Combadge{
      */
     incrementSerial () {
         this.serverSerial += 1;
-    };
+    }
 
     /**
      * Call a specific RTP Target.
@@ -270,7 +273,7 @@ class Combadge{
         callRTP.serial = this.serverSerial;
         this.sendCommandToBadge(callRTP);
         this.callState = "Active";
-    };
+    }
 
     hangUp () {
         this.incrementSerial();
@@ -278,7 +281,7 @@ class Combadge{
         hangUp.serial = this.serverSerial;
         this.sendCommandToBadge(hangUp); 
         this.callState = "Ended";
-    };
+    }
 
     /**
      * Callback for an Agent (or other software) to instruct the Combadge
@@ -303,10 +306,10 @@ class Combadge{
                 //console.log(`API requested call between ${this.MAC} and ${}`);
 
             default:
-        };
+        }
 
         return true;
-    };
-};
+    }
+}
 
 export { Combadge };

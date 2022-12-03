@@ -47,7 +47,7 @@ class Agent {
         this.recSamples = [];
         this.transcoding = false;
         this._callback = callback;
-    };
+    }
 
     recogniseBatch () {
         console.log("Transcoding, please wait.")
@@ -58,28 +58,28 @@ class Agent {
         var wav16buffer = new Buffer.from(samples1616.buffer);
         console.log("Result:", model.stt(wav16buffer));
         this.transcoding = false;
-    };
+    }
 
     receiveSamples (samples) {
         if (this.transcoding == false) {
             this.samples.push(...samples);
-        };
+        }
         if (this.samples.length > 50000) {
             this.recSamples = this.samples;
             this.samples = [];
             this.recogniseBatch();
-        };
+        }
         return true;
-    };
+    }
 
     set callback (callback = undefined) {
         // Future task - verify that callback is either undefined or a function here.
         this._callback = callback;
-    };
+    }
 
     get callback () {
         return this._callback;
-    };
-};
+    }
+}
 
 export { Agent };

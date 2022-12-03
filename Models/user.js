@@ -39,5 +39,5 @@
 class User {
     constructor() {
 
-    };
-};
+    }
+}
