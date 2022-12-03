@@ -223,7 +223,6 @@ class IPv6Address extends IPAddress {
         switch (typeof(address)) {
             case "string":
                 return IPv6Address.fromString(address);
-            break;
 
             case "object":
                 if (address instanceof Buffer) {

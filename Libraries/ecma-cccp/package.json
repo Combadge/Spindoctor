@@ -1,5 +1,5 @@
 {
-    "name": "ecma-cccp",
+    "name": "@combadge/ecma-cccp",
     "version": "0.0.6",
     "type": "module",
     "description": "Communicator Command and Control Protocol, an implementation of an OEM Combadge control protocol for Spin Doctor",
@@ -28,5 +28,5 @@
     "homepage": "https://github.com/Combadge/Spindoctor#readme",
     "dependencies": {
     }
-  }
+}
   

@@ -21,7 +21,10 @@ import { UserIdent } from "./identifier.mjs";
 /**
  * The protocol ident from the command packet header.
  */
-const VozIdent = "aeaeaeae";
+const Idents = {
+    bProtocol: "aeaeaeae",
+    vProtocol: "56435241"
+}
 
 /**
  * A pairing of ServerCommand:BadgeCommand. Used for defining packets to send
@@ -178,9 +181,17 @@ function stringByteLength (string) {
      * Inspired by Array.from().
      */
     static from(packet) {
-        if (packet.slice(0, 4).toString('hex') !== VozIdent) {
-            throw new Error("Not a Combadge Control Packet", packet.toString('hex'));
+        var packetIdent = packet.slice(0, 4).toString('hex');
+        switch (packetIdent) {
+            case Idents.bProtocol:
+                break;
+            case Idents.vProtocol:
+                console.log("Received new-style packet:", packet.toString('hex'));
+            return undefined;
+            default:
+                throw new Error("Not a Combadge Control Packet", packet.toString('hex'));
         }
+
         var command = packet.slice(4, 6).toString('hex');
 
         var segmentedPacket = {
@@ -221,7 +232,7 @@ function stringByteLength (string) {
 
     toBuffer (values) {
 
-        var hexPackedPacket = VozIdent + values.command + values.firstSetting + values.secondSetting + this.hexSerial + this.MAC + values.data;
+        var hexPackedPacket = Idents.bProtocol + values.command + values.firstSetting + values.secondSetting + this.hexSerial + this.MAC + values.data;
         return Buffer.from(hexPackedPacket, 'hex');
     }
 }

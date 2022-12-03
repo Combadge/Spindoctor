@@ -302,7 +302,6 @@ class Combadge{
                 break;
 
             case "callTarget":
-                
                 //console.log(`API requested call between ${this.MAC} and ${}`);
 
             default:
