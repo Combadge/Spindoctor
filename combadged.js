@@ -44,7 +44,7 @@ class AgentManager {
         //set_up_the_agents;
         this._FreeAgents = {};
         this._AssignedAgents = {};
-    };
+    }
 
     createAgent (rtpPortNumber) {
         var agent = new Agent;
@@ -68,11 +68,11 @@ class AgentManager {
             var rtpPacket = RTPPacket.from(message);
             agent.receiveSamples(rtpPacket.payload);
         });
-    };
+    }
 
     getSpecificAgent (agentPort) {
         return this._FreeAgents.concat(this._AssignedAgents)[agentPort]
-    };
+    }
 
     getAgent (callback) {
         if (this._FreeAgents.length == 0) {
@@ -81,22 +81,22 @@ class AgentManager {
                 throw "Reached maximum number of simultaneous Agents";
             } else {
                 this.createAgent(maxKey++);
-            };
-        };
+            }
+        }
 
         var firstAgent = Object.keys(this._FreeAgents)[0];
         this._AssignedAgents[firstAgent] = this._FreeAgents[firstAgent];
         this._AssignedAgents[firstAgent].callback = callback;
         delete this._FreeAgents[firstAgent];
         return firstAgent;
-    };
+    }
 
     freeAgent (agentPort) {
         this._FreeAgents[agentPort] = this._AssignedAgents[agentPort];
         this._FreeAgents[agentPort] = undefined;
         delete this._AssignedAgents[agentPort];
         return true;
-    };
+    }
 
 }
 
@@ -123,7 +123,7 @@ const Manager = new AgentManager;
 for (let rtpPort = rtpPortRangeStart; rtpPort < (rtpPortRangeStart + rtpPoolInit); rtpPort++) {
     console.log(`Spawning agent at port ${rtpPort}`)
     Manager.createAgent(rtpPort);
-};   
+}   
 
 /**
  * Handle the command and control protocol. Detect new badges to create Objects for
@@ -136,13 +136,13 @@ controlServer.on('message', (message, clientInfo) => {
     if (packet == undefined) {
         console.log(`Received datagram from badge at ${address}:${port}. Ignoring faulty or incompatible packet.`);
         return false;
-    };
+    }
     if (packet.MAC in activeBadges) {
         activeBadges[packet.MAC].packetSorter(packet);
     } else {
         activeBadges[packet.MAC] = new Combadge(packet.MAC, address, port, packet, controlServer);
         activeBadges[packet.MAC].agentPort = Manager.getAgent(activeBadges[packet.MAC].externalCallback);
-    };
+    }
 });
 
 /**
@@ -173,7 +173,7 @@ app.post('/badges/:badgeMAC/callTarget', (request, responder) => {
     if (!(request.params.badgeMAC in activeBadges)) {
         responder.status(404);
         return responder.send(`Badge ${request.params.badgeMAC} is not registered on the server.`);
-    };
+    }
     if (!("targetMAC" in request.body)) {
         responder.status(400);
         return responder.send("Request body must be either empty or contain string values userName and prettyName.");
@@ -185,7 +185,7 @@ app.post('/badges/:badgeMAC/callTarget', (request, responder) => {
         var target = activeBadges[request.body["targetMAC"]];
         initiator.callRTP(target.IP, 5200);
         target.callRTP(initiator.IP, 5200);
-    };
+    }
 
     return responder.send([true]);
 });
@@ -194,7 +194,7 @@ app.post('/badges/:badgeMAC/user', (request, responder) => {
     if (!(request.params.badgeMAC in activeBadges)) {
         responder.status(404);
         return responder.send(`Badge ${request.params.badgeMAC} is not registered on the server.`);
-    };
+    }
     if (!Object.keys(request.body).length) {
         return responder.send(activeBadges[request.params.badgeMAC].externalCallback("logout"));
     } else if (("userName" in request.body) && ("prettyName" in request.body)) {
@@ -202,7 +202,7 @@ app.post('/badges/:badgeMAC/user', (request, responder) => {
     } else {
         responder.status(400);
         return responder.send("Request body must be either empty or contain string values userName and prettyName.");
-    };
+    }
 });
 
 app.listen(apiPort, () =>

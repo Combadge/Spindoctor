@@ -40,5 +40,5 @@ class Terminal {
     constructor(MAC, IP) {
         this.IP = IP;
         this.MAC = MAC;
-    };
-};
+    }
+}

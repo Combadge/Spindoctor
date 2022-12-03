@@ -23,60 +23,60 @@ class Identifier {
                 throw `Target identifier ${identifier} too long. Cap is 12 characters.`;
             } else {
                 this._identifier = identifier;
-            };
+            }
         } else {
             throw "Identifier must be of type String.";
-        };
-    };
+        }
+    }
 
     toString () {
         return this._identifier;
-    };
+    }
 
     toJSON () {
         return {"identifier": this.identifier};
-    };
+    }
 
     toBuffer (source=this._identifier) {
         var identBuffer = Buffer.from(source, 'utf8');
         var lengthBuffer = new Buffer.from([0,0]);
         lengthBuffer.writeUInt16BE(identBuffer.length);
         return Buffer.concat([lengthBuffer, identBuffer]);
-    };
-};
+    }
+}
 
 class UserIdent extends Identifier {
     constructor (userName="u-fakeuser",prettyName="Fake User") {
         super("u-username");
         this._userName = userName;
         this._prettyName = prettyName;
-    };
+    }
 
     toString () {
         return `${this._userName} ${this._prettyName}`;
-    };
+    }
 
     toJSON () {
         return {
             "userName": this._userName,
             "prettyName": this._prettyName
         };
-    };
+    }
 
     get userName () {
         return this._userName;
-    };
+    }
 
     get prettyName () {
         return this._userName;
-    };
+    }
 
     toBuffer() {
         var userBuffer = super.toBuffer(this._userName);
         var prettyBuffer = super.toBuffer(this._prettyName);
         return Buffer.concat([userBuffer, prettyBuffer]);
-    };
+    }
 
-};
+}
 
 export { Identifier, UserIdent };

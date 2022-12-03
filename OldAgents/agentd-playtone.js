@@ -45,10 +45,10 @@ function generateSamples (oldSamples) {
         var outSamples = new Int16Array(oldSamples.length+newSamples.length);
         outSamples.set(oldSamples);
         outSamples.set(newSamples,oldSamples.length);
-    };
+    }
 
     return outSamples;
-};
+}
 
 
 const audioServer = dgram.createSocket('udp4');
@@ -71,7 +71,7 @@ audioServer.on('message', (message, clientInfo) => {
 
     if (samples.length < 2000) {
         samples = generateSamples(samples);
-    };
+    }
 
     var pcmClip = samples.subarray(0,160);
     samples = samples.subarray(160);

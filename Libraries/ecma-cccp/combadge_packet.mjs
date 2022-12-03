@@ -76,7 +76,7 @@ const VozServerCommands = {
     var badgeCommands = {};
     for (var command in serverCommands) {
         badgeCommands[serverCommands[command]] = command;
-    };
+    }
     return badgeCommands;
 } (VozServerCommands);
 
@@ -97,11 +97,11 @@ const VozBSSIDError = 18; // I have no idea why, but it adds
     var output = "";
     for (var n = 0; n < hexString.length; n += 2) {
         output += String.fromCharCode(parseInt(hexString.substr(n, 2), 16));
-    };
+    }
     return output;
-};
+}
 
-function asciiCode (character) { return character.charCodeAt(0); };
+function asciiCode (character) { return character.charCodeAt(0); }
 
 /**
  * Take a string of ASCII values and extract hex form.
@@ -111,37 +111,37 @@ function asciiCode (character) { return character.charCodeAt(0); };
     var hexCharCode = intCharCode.map(char => char.toString(16));
 
     return hexCharCode.join("");
-};
+}
 
 function ipDecToHex (address) {
     var bytes = address.split(".");
     return bytes.map(value => parseInt(value).toString(16).padStart(2, '0')).join("");
-};
+}
 
 function bufferToMacAddr (macBuffer) {
     return macBuffer.toString('hex').match( /.{1,2}/g ).join( ':' );
-};
+}
 
 function macAddrToBuffer (macAddress) {
     return Buffer.from(macAddress.split(':').join(''), 'hex');
-};
+}
 
 function bufferToBSSID (bssidBuffer) {
     var bssidArray = bssidBuffer.toString('hex').match( /.{1,2}/g );
     bssidArray[0] = ( parseInt(bssidArray[0], 16) - VozBSSIDError ).toString(16);
     return bssidArray.join( ':' );
-};
+}
 
 function bssidToBuffer (bssid) {
     var bssidArray = bssid.split(':');
     bssidArray[0] = ( parseInt(bssidArray[0], 16) + VozBSSIDError ).toString(16);
     return Buffer.from(bssid.join(''), 'hex');
-};
+}
 
 function stringByteLength (string) {
     var byteCount = string.length/2;
     return byteCount.toString(16).padStart(4,'0');
-};
+}
 
 
 /**
@@ -153,15 +153,15 @@ function stringByteLength (string) {
 
     constructor (macAddress) {
         this.MAC = macAddress;
-    };
+    }
 
     set serial (serialValue) {
         this._serial = serialValue.toString(16).padStart(8, '0');
-    };
+    }
 
     get serial () {
         return parseInt(this._serial, 16);
-    };
+    }
 
     get hexSerial () {
         return this._serial;
@@ -180,7 +180,7 @@ function stringByteLength (string) {
     static from(packet) {
         if (packet.slice(0, 4).toString('hex') !== VozIdent) {
             throw new Error("Not a Combadge Control Packet", packet.toString('hex'));
-        };
+        }
         var command = packet.slice(4, 6).toString('hex');
 
         var segmentedPacket = {
@@ -210,21 +210,21 @@ function stringByteLength (string) {
             case VozServerCommands.MaybeSendLogs:
                 var newPacket = BadgeLogs.from(segmentedPacket);
                 break;
-        };
+        }
 
         if (newPacket) {
             return newPacket;
         } else {
             return undefined;
         }
-    };
+    }
 
     toBuffer (values) {
 
         var hexPackedPacket = VozIdent + values.command + values.firstSetting + values.secondSetting + this.hexSerial + this.MAC + values.data;
         return Buffer.from(hexPackedPacket, 'hex');
     }
-};
+}
 
 /**
  * Cannot be compiled, only ever received from the badge, never sent to it.
@@ -238,11 +238,11 @@ class Ping extends CombadgePacket {
         this.accessPoint = packetData.apBSSID;
         this.userName = packetData.userName;
         this.prettyName = packetData.prettyName;
-    };
+    }
 
     toString () {
         return `AP: ${this.accessPoint}, login: ${this.userName}, name: ${this.prettyName}`;
-    };
+    }
 
     static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
@@ -265,7 +265,7 @@ class Ping extends CombadgePacket {
             dataValues.userName = undefined;
         } else {
             dataValues.userName = hexToUnicode(uname);
-        };
+        }
         packetData = packetData.slice((unameLength+2));
 
         var pnameLength = packetData.slice(0,2).readInt16BE();
@@ -274,7 +274,7 @@ class Ping extends CombadgePacket {
             dataValues.prettyName = undefined;
         } else {
             dataValues.prettyName = hexToUnicode(pname);
-        };
+        }
         packetData = packetData.slice((pnameLength+2));
 
         var __40spacer = packetData.slice(0, 20);
@@ -285,12 +285,12 @@ class Ping extends CombadgePacket {
         var returnPacket = new Ping(MAC, {propertyVersion: propertyVersion, firmwareVersion: firmwareVersion, packetData: dataValues});
         returnPacket.serial = packetSerial;
         return returnPacket;
-    };
+    }
 
     toBuffer () {
         throw TypeError("Ping is a badge-only command and cannot be compiled.");
-    };
-};
+    }
+}
 
 
 class Ack extends CombadgePacket {
@@ -298,15 +298,15 @@ class Ack extends CombadgePacket {
         super(MAC);
         this.sendTime = sendTime;
         this.sendAudio = sendAudio;
-    };
+    }
 
     toString () {
         if (this.sendTime) {
             return `Sending Timestamp`;
         } else {
             return `Blank ACK`;
-        };
-    };
+        }
+    }
 
     static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
@@ -318,7 +318,7 @@ class Ack extends CombadgePacket {
         var returnPacket = new Ack(MAC);
         returnPacket.serial = packetSerial;
         return returnPacket;
-    };
+    }
 
     toBuffer () {
         if (this.sendTime) {
@@ -326,13 +326,13 @@ class Ack extends CombadgePacket {
             var data = `${unixtime.toString(16)}0000012b`;
         } else {
             var data = `${EmptySetting}${EmptySetting}${EmptySetting}${EmptySetting}`;
-        };
+        }
 
         if (this.sendAudio) {
             var audioProtocol = VozAudioProtocol.RTP;
         } else {
             var audioProtocol = EmptySetting;
-        };
+        }
 
         var values = {
             command: VozServerCommands.Ack,
@@ -341,8 +341,8 @@ class Ack extends CombadgePacket {
             data: data
         };
         return super.toBuffer(values);
-    };
-};
+    }
+}
 
 /**
  * Send badge the current settings. Currently running with the default from a B3000N - 40 for no DND, plus whatever bb8cf3 is.
@@ -352,11 +352,11 @@ class Ack extends CombadgePacket {
  class NewMessageA extends CombadgePacket {
     constructor (MAC, {} = {}) {
         super(MAC);
-    };
+    }
 
     toString () {
         return `Packet design incomplete. No summary available.`;
-    };
+    }
 
     toBuffer () {
         var values = {
@@ -366,8 +366,8 @@ class Ack extends CombadgePacket {
             data: "".padEnd(20,"04")
         };
         return super.toBuffer(values);
-    };
-};
+    }
+}
 
 /**
  * Send badge the current settings. Currently running with the default from a B3000N - 40 for no DND, plus whatever bb8cf3 is.
@@ -377,11 +377,11 @@ class Ack extends CombadgePacket {
 class BadgeSettings extends CombadgePacket {
     constructor (MAC, {} = {}) {
         super(MAC);
-    };
+    }
 
     toString () {
         return `Packet design incomplete. No summary available.`;
-    };
+    }
 
     toBuffer () {
         var values = {
@@ -391,8 +391,8 @@ class BadgeSettings extends CombadgePacket {
             data: '40bb8cf3'.padEnd(20,"04")
         };
         return super.toBuffer(values);
-    };
-};
+    }
+}
 
 class CallPressed extends CombadgePacket {
     constructor (MAC, {propertyVersion = EmptySetting, firmwareVersion = EmptySetting, callState = false} = {}) {
@@ -400,15 +400,15 @@ class CallPressed extends CombadgePacket {
         this.propertyVersion = propertyVersion;
         this.firmwareVersion = firmwareVersion;
         this.callState = callState;
-    };
+    }
 
     toString () {
         if (this.callState) {
             return `Dialling in progress.`;
         } else {
             return `Beginning Call`;
-        };
-    };
+        }
+    }
 
     static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
@@ -420,8 +420,8 @@ class CallPressed extends CombadgePacket {
         var returnPacket = new CallPressed(MAC, {propertyVersion: propertyVersion, firmwareVersion: firmwareVersion, callState: callState});
         returnPacket.serial = packetSerial;
         return returnPacket;
-    };
-};
+    }
+}
 
 class ErBits extends CombadgePacket {
     constructor (MAC, {propertyVersion = EmptySetting, firmwareVersion = EmptySetting, erbits = Buffer.from([])} = {}) {
@@ -429,11 +429,11 @@ class ErBits extends CombadgePacket {
         this.propertyVersion = propertyVersion;
         this.firmwareVersion = firmwareVersion;
         this.erbits = erbits;
-    };
+    }
 
     toString () {
         return `Packet design incomplete. No summary available.`;
-    };
+    }
 
     static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
@@ -445,8 +445,8 @@ class ErBits extends CombadgePacket {
         var returnPacket = new ErBits(MAC, {propertyVersion: propertyVersion, firmwareVersion: firmwareVersion, erbits: erbits});
         returnPacket.serial = packetSerial;
         return returnPacket;
-    };
-};
+    }
+}
 
 
 class BadgeLogs extends CombadgePacket {
@@ -455,11 +455,11 @@ class BadgeLogs extends CombadgePacket {
         this.propertyVersion = propertyVersion;
         this.firmwareVersion = firmwareVersion;
         this.badgeLogs = badgeLogs;
-    };
+    }
 
     toString () {
         return `Packet design incomplete. No summary available.`;
-    };
+    }
 
     static from (structuredPacket) {
         var MAC = structuredPacket.MAC;
@@ -471,8 +471,8 @@ class BadgeLogs extends CombadgePacket {
         var returnPacket = new BadgeLogs(MAC, {propertyVersion: propertyVersion, firmwareVersion: firmwareVersion, badgeLogs: badgeLogs});
         returnPacket.serial = packetSerial;
         return returnPacket;
-    };
-};
+    }
+}
 
 /**
  * Set the badge's display to show the target that we're calling. Defaults to
@@ -482,11 +482,11 @@ class BadgeLogs extends CombadgePacket {
     constructor (MAC, {displayString = AgentName} = {}) {
         super(MAC);
         this.displayString = displayString;
-    };
+    }
 
     toString () {
         return `Setting display to: ${this.displayString}`;
-    };
+    }
 
     toBuffer () {
         var displayString = unicodeToHex(this.displayString);
@@ -501,8 +501,8 @@ class BadgeLogs extends CombadgePacket {
             data: data
         };
         return super.toBuffer(values);
-    };
-};
+    }
+}
 
 /**
  * Send RTP connection details and trigger the badge to start a call.
@@ -513,11 +513,11 @@ class CallRTP extends CombadgePacket {
         this.targetAddress = address;
         //This is where we need to spawn an RTP server thread.
         this.targetPort = port;
-    };
+    }
 
     toString () {
         return `Calling RTP host at ${this.targetAddress}:${this.targetPort}`;
-    };
+    }
 
     toBuffer () {
         var values = {
@@ -527,17 +527,17 @@ class CallRTP extends CombadgePacket {
             data: `000100010001${ipDecToHex(this.targetAddress)}${parseInt(this.targetPort).toString(16)}000100`
         };
         return super.toBuffer(values);
-    };
-};  
+    }
+}  
 
 class HangUp extends CombadgePacket {
     constructor (MAC, {} = {}) {
         super(MAC);
-    };
+    }
 
     toString () {
         return `Ending active call.`;
-    };
+    }
 
     toBuffer () {
         var values = {
@@ -547,18 +547,18 @@ class HangUp extends CombadgePacket {
             data: ""
         };
         return super.toBuffer(values);
-    };
-};
+    }
+}
 
 class LogIn extends CombadgePacket {
     constructor (MAC, userIdent = new UserIdent) {
         super(MAC);
         this.userIdent = userIdent
-    };
+    }
 
     toString () {
         return `Logging in user ${this.userIdent}`;
-    };
+    }
 
     toBuffer () {
         var values = {
@@ -568,18 +568,18 @@ class LogIn extends CombadgePacket {
             data: this.userIdent.toBuffer().toString('hex')
         };
         return super.toBuffer(values);
-    };
-};
+    }
+}
 
 
 class LogOut extends CombadgePacket {
     constructor (MAC, {} = {}) {
         super(MAC);
-    };
+    }
 
     toString () {
         return `Logging user out.`;
-    };
+    }
 
     toBuffer () {
         var values = {
@@ -589,8 +589,8 @@ class LogOut extends CombadgePacket {
             data: ""
         };
         return super.toBuffer(values);
-    };
-};
+    }
+}
 
 
 /**
@@ -601,11 +601,11 @@ class PromptText extends CombadgePacket {
     constructor (MAC, {prompt = "default_prompt"} = {}) {
         super(MAC);
         this.prompt = prompt;
-    };
+    }
 
     toString () {
         return `Sending prompt: ${this.prompt}`;
-    };
+    }
 
     toBuffer () {
         var promptText = "Prompt: " + this.prompt;
@@ -617,8 +617,8 @@ class PromptText extends CombadgePacket {
             data: `${stringByteLength(promptString)}${promptString}`
         };
         return super.toBuffer(values);
-    };
-};
+    }
+}
 
 /**
  * Send badge the name of the current AP. Currently just stubbing this out. We need to actuall manage AP names before we can give real ones.

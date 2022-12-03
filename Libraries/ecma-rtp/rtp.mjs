@@ -33,19 +33,19 @@ const Payload = {
 
 function findPayload(payloadNumber) {
     return Object.keys(Payload).find(key => Payload[key] === payloadNumber);
-};
+}
 
 function significantBits (integerValue, bitLength) {
     return integerValue.toString(2).padStart(bitLength, '0');
-};
+}
 
 function booleanBits (booleanValue, bitLength = 1) {
     return (booleanValue ? 1 : 0).toString(2).padStart(bitLength, '0');
-};
+}
 
 function bufferBits(buffer) {
     return [...buffer].map((b) => b.toString(2).padStart(8, '0')).join('');
-};
+}
 
 function binstringToHex(binstring, wordSize = 8) {
     const wordCount = Math.ceil(binstring.length / wordSize);
@@ -54,7 +54,7 @@ function binstringToHex(binstring, wordSize = 8) {
     while (bytes.length < wordCount) {
         var bit = bytes.length * wordSize;
         bytes.push(binstring.substr(bit, wordSize));
-    };
+    }
 
     var hexValue = new String();
     bytes.forEach(function (item, index) {
@@ -98,7 +98,7 @@ class RTPHeader {
         // Bytes 13+
         this.csrcs = csrcs; // not currently in use, but might as well have it!
         this.extensions = extensions; // See above.
-    };
+    }
 
     /**
      * Takes a dgram as a Buffer, and decodes it into a structured object
@@ -112,12 +112,12 @@ class RTPHeader {
         var rtpVersion = parseInt(rtpFormat.slice(0,2), 2);
         if (rtpVersion !== 2) {
             throw "Not an RTP v2 Packet!";
-        };
+        }
 
         var padding = !!+rtpFormat.slice(2,3);
-        if (!!padding) {
+        if (padding) {
             console.log("RTP Packet is padded, unsupported case!")
-        };
+        }
 
         var extension = !!+rtpFormat.slice(3,4);
         var csrcCount = parseInt(rtpFormat.slice(4,8), 2);
@@ -125,13 +125,13 @@ class RTPHeader {
             throw "Extension/CSRC present, unsupported header size!";
         } else {
             var lengthOfHeader = 12; // For now, assume a minimalist 12 byte header. We should handle extensions and multiple csrcs but it's not necessary yet.
-        };
+        }
 
         var payloadFormat = bufferBits(packet.slice(1,2));
         var marker = !!+payloadFormat.slice(0,1);
-        if (!!marker) {
+        if (marker) {
             console.log("Payload Marker bit set. I have no idea what to do with that.");
-        };
+        }
         var payloadType = parseInt(payloadFormat.slice(1,8), 2);
 
         // var payloadType = Payload[findPayload(payloadType)] // Brutish validation to check supported Payload type. Not sure we're there yet.
@@ -144,7 +144,7 @@ class RTPHeader {
         var header = new RTPHeader(payloadSize, payloadType, ssrc);
         header.forceHeader(sequenceNo, timeStamp);
         return header;
-    };
+    }
 
     /**
      * Return header as buffer so it can be prepended to an audio stream.
@@ -182,14 +182,14 @@ class RTPHeader {
         var combinedHeader = binstringToHex(rtpFormat + payloadFormat + sequenceNo + timeStamp + ssrc);
         console.log(combinedHeader.length, combinedHeader); ///////////////////////////////////////////////////////////////
         return combinedHeader;
-    };
+    }
 
     /**
      * Represent header in human-readable format for display and logging.
      */
     toString () {
         return "RTPHeader.toString() not implemented.";
-    };
+    }
 
     /**
      * Update header with latest sequence and timestamp
@@ -197,7 +197,7 @@ class RTPHeader {
     incrementHeader() {
         this.sequenceNo += 1;
         this.timeStamp += this.payloadSize;
-    };
+    }
 
     /**
      * Explicitly set sequence and timestamp.
@@ -208,8 +208,8 @@ class RTPHeader {
     forceHeader(sequenceNo, timeStamp) {
         this.sequenceNo = sequenceNo;
         this.timeStamp = timeStamp;
-    };
-};
+    }
+}
 
 /**
  * Again - values specifically hardcoded for Spin Doctor.
@@ -236,15 +236,15 @@ class RTPHeader {
         var header = RTPHeader.from(packet);
         var payload = packet.slice(header.payloadSize * -1);
         return new RTPPacket(header, payload);
-    };
+    }
 
     set payload (payload) {
 
-    };
+    }
 
     get payload () {
         return this._payload;
-    };
+    }
 
     /**
      * Transcode media to desired codec. Will presumably also need to handle
@@ -262,7 +262,7 @@ class RTPHeader {
      */
     toBuffer() {
 
-    };
+    }
 
     /**
      * Represent the packet as a string form. Needs work.
@@ -271,8 +271,8 @@ class RTPHeader {
         var headerString = this.header.toString();
 
         return headerString, "RTPPacket.toString() not implemented.";
-    };
-};
+    }
+}
 
 /**
  * Temporary class - replace with RTPPacket instances when you work out how.
@@ -281,7 +281,7 @@ class RTPStream {
     constructor() {
         this.sampleCount = new Number(160); // At 8 bits/sample, this can be used for both incrementing the timestamp AND counting bytes.
         this.header = new RTPHeader(this.sampleCount);
-    };
+    }
 
 
     /**
@@ -293,7 +293,7 @@ class RTPStream {
         var completeBuffer = Buffer.concat([headerBuffer, bytes]);
         this.header.updateHeader();
         return completeBuffer;
-    };
+    }
 
     /**
      * Return a decoded media array without transcoding.
@@ -305,8 +305,8 @@ class RTPStream {
         var headerValues = this.header.decode(headerSection);
 
         return mediaSection;
-    };
-};
+    }
+}
 
 class MediaQueue {
     constructor() {
@@ -319,14 +319,14 @@ class MediaQueue {
      */
     addReceivedPacket (packet, callback) {
         return null;
-    };
+    }
 
     /**
      * Add a media stream for RTP encoding
      */
     addTransmitMedia (samples, callback) {
         return null;
-    };
-};
+    }
+}
 
 export { Payload, RTPHeader, RTPStream, RTPPacket, MediaQueue };

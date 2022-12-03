@@ -30,7 +30,7 @@ class IPAddress {
         this._address = address;
         this._subnet = undefined;
         this.multicast = multicast;
-    };
+    }
 
     /**
      * Create an IP address from a passed buffer or string.
@@ -41,17 +41,16 @@ class IPAddress {
         switch (typeof(address)) {
             case "string":
                 return IPAddress.fromString(address);
-            break;
 
             case "object":
                 if (address instanceof Buffer) {
                     return IPAddress.fromBuffer(address);
-                };
+                }
 
             default:
                 throw "Not a string or a buffer, can't parse as IP address.";
-        };
-    };
+        }
+    }
 
     /**
      * Create an IP address from a passed string.
@@ -65,8 +64,8 @@ class IPAddress {
             return IPv6Address.fromString(stringAddress);
         } else {
             return IPv4Address.fromString(stringAddress);
-        };
-    };
+        }
+    }
 
     /**
      * Create an IP address from a passed buffer.
@@ -78,8 +77,8 @@ class IPAddress {
             return IPv6Address.fromBuffer(bufferAddress);
         } else {
             return IPv4Address.fromBuffer(bufferAddress);
-        };
-    };
+        }
+    }
 
     /**
      * Set the subnet from an int or "int" of CIDR
@@ -88,7 +87,7 @@ class IPAddress {
      */
     set cidrSubnet (subnet) {
         this._subnet = parseInt(subnet);
-    };
+    }
 
     /**
      * Set the subnet from a string or buffer in mask format.
@@ -97,29 +96,29 @@ class IPAddress {
      */
     set subnetMask (subnet) {
         this._subnet = parseInt(subnet);
-    };
+    }
 
     /**
      * Represent IP Address as a human-readable string notation,
      * defaulting to ddn for IPv4 and cdn for IPv6 with no cidr mask.
      */
     toString (preformatted = undefined, includeCIDR = false) {
-        if (!!preformatted) {
+        if (preformatted) {
             return ""; // This should never be called directly, only from a subclass.
         } else {
             var formatted = preformatted;
-        };
+        }
 
-        if (!!includeCIDR) {
-            if (!!this._subnet) {
+        if (includeCIDR) {
+            if (this._subnet) {
                 formatted.concat("/", this.subnet.toString(10));
             } else {
                 throw "CIDR requested but subnet unset!";
-            };
-        };
+            }
+        }
 
         return formatted;
-    };
+    }
     
     /**
      * Inspired by toString and toJSON, outputs the IP address as raw bytes
@@ -128,8 +127,8 @@ class IPAddress {
      */
     toBuffer() {
         return this._address;
-    };
-};
+    }
+}
 
 /**
  * Subclass of IPAddress for IPv4 addresses.
@@ -137,7 +136,7 @@ class IPAddress {
 class IPv4Address extends IPAddress {
     constructor (address, multicast = undefined) {
         super(address, multicast);
-    };
+    }
 
     /**
      * Create an IP address from a passed buffer or string.
@@ -148,17 +147,16 @@ class IPv4Address extends IPAddress {
         switch (typeof(address)) {
             case "string":
                 return IPv4Address.fromString(address);
-            break;
 
             case "object":
                 if (address instanceof Buffer) {
                     return IPv4Address.fromBuffer(address);
-                };
+                }
 
             default:
                 throw "Not a string or a buffer, can't parse as IP address.";
-        };
-    };
+        }
+    }
 
     /**
      * Create an IP address from a passed string.
@@ -171,19 +169,19 @@ class IPv4Address extends IPAddress {
         var cidrSubnet = undefined;
         if (cidrTested.length > 1) {
             cidrSubnet = cidrTested[1];
-        };
+        }
 
         var noCIDRAddress = cidrTested[0];
         var address = new Buffer(noCIDRAddress.split(".").map(value => parseInt(value)));
 
-        ipInstance = new IPv4Address(address);
+        var ipInstance = new IPv4Address(address);
 
-        if (!!cidrSubnet) {
+        if (cidrSubnet) {
             ipInstance.setCidrSubnet(cidrSubnet);
-        };
+        }
 
         return ipInstance;
-    };
+    }
 
     /**
      * Create an IP address from a passed buffer.
@@ -195,8 +193,8 @@ class IPv4Address extends IPAddress {
             return new IPv4Address(bufferAddress);
         } else {
             throw "Not a string or a buffer, can't parse as IP address.";
-        };
-    };
+        }
+    }
 
     /**
      * Represent IP Address as a human-readable string notation,
@@ -204,8 +202,8 @@ class IPv4Address extends IPAddress {
      */
     toString (includeCIDR = false) {
         return this._address.map(value => value.toString(10).padStart(2, '0')).join("");
-    };
-};
+    }
+}
 
 /**
  *
@@ -214,7 +212,7 @@ class IPv4Address extends IPAddress {
 class IPv6Address extends IPAddress {
     constructor (address, multicast = undefined) {
         super(address, multicast);
-    };
+    }
 
     /**
      * Create an IP address from a passed buffer or string.
@@ -230,12 +228,12 @@ class IPv6Address extends IPAddress {
             case "object":
                 if (address instanceof Buffer) {
                     return IPv6Address.fromBuffer(address);
-                };
+                }
 
             default:
                 throw "Not a string or a buffer, can't parse as IP address.";
-        };
-    };
+        }
+    }
 
     /**
      * Create an IP address from a passed string.
@@ -248,19 +246,19 @@ class IPv6Address extends IPAddress {
         var cidrSubnet = undefined;
         if (cidrTested.length > 1) {
             cidrSubnet = cidrTested[1];
-        };
+        }
 
         var noCIDRAddress = cidrTested[0];
         var address = new Buffer(noCIDRAddress.split(":").map(value => parseInt(value, 16)));
 
-        ipInstance = new IPv6Address(address);
+        var ipInstance = new IPv6Address(address);
 
-        if (!!cidrSubnet) {
+        if (cidrSubnet) {
             ipInstance.setCidrSubnet(cidrSubnet);
-        };
+        }
 
         return ipInstance;
-    };
+    }
 
     /**
      * Create an IP address from a passed buffer.
@@ -271,8 +269,8 @@ class IPv6Address extends IPAddress {
             return new IPv6Address(bufferAddress);
         } else {
             throw "Not a string or a buffer, can't parse as IP address.";
-        };
-    };
+        }
+    }
 
     /**
      * Represent IP Address as a human-readable string notation,
@@ -280,8 +278,8 @@ class IPv6Address extends IPAddress {
      */
     toString (includeCIDR = false) {
         return this._address.map(value => value.toString(16).padStart(2, '0')).join("");
-    };
-};
+    }
+}
 
 /**
  * Yep, we're going all the way.
@@ -295,7 +293,7 @@ class Port {
         this.transport = transport;
         this.port = port;
         this.protocol = port;
-    };
+    }
 
     set port (port) {
         if (typeof(port) == 'number') {
@@ -304,49 +302,49 @@ class Port {
             this.#port = port.readInt16BE;
         } else {
             throw "Port is not in Number or Buffer form."
-        };
+        }
         
-    };
+    }
 
     set transport (transport) {
         if (Transports.includes(transport)) {
             this.#transport = transport;
         } else {
             throw `Unsupported Transport ${transport}`;
-        };
-    };
+        }
+    }
 
     set protocol (protocol) {
         if (Protocols.includes(protocol)) {
             this.#protocol = protocol;
         } else {
             throw `Unsupported Protocol ${protocol}`;
-        };
-    };
+        }
+    }
 
     get protocol () {
         return this.#protocol;
-    };
+    }
 
     get transport () {
         return this.#transport;
-    };
+    }
 
     get port () {
         return this.#port;
-    };
+    }
 
     toString () {
         return `Instance of ${this.protocol} on ${this.transport}:${this.port}`
-    };
+    }
 
     toBuffer () {
         return Buffer.from([this.port]);
-    };
+    }
 
     valueOf () {
         return this.port;
-    };
-};
+    }
+}
 
 export {IPAddress, IPv4Address, IPv6Address, Port};
