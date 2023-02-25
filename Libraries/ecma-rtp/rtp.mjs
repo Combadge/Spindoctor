@@ -269,6 +269,82 @@ class RTPHeader {
 }
 
 /**
+ * I don't even know if the Combadges use RTCP but we might as well start stubbing for it.
+ * 
+ * 
+ *  Version: (2 bits) Identifies the version of RTP, which is the same in RTCP packets as in RTP data packets. The version defined by this specification is two (2).[2]
+ *  P (Padding): (1 bits) Indicates if there are extra padding bytes at the end of the RTP packet. Padding may be used to fill up a block of certain size, for example as required by an encryption algorithm. The last byte of the padding contains the number of padding bytes that were added (including itself).[2]
+ *  RC (Reception report count): (5 bits) The number of reception report blocks contained in this packet. A value of zero is valid.[2]
+ *  PT (Packet type): (8 bits) Contains a constant to identify RTCP packet type.[2]
+ *  Length: (16 bits) Indicates the length of this RTCP packet (including the header itself) in 32-bit units minus one.[2]
+ *  SSRC: (32 bits) Synchronization source identifier uniquely identifies the source of a stream.[2]
+ */
+class RTCPHeader {
+    constructor () {
+
+    }
+
+    static from (packet) {
+
+    }
+
+    /**
+     * Return the packet, ready to send.
+     */
+    toBuffer() {
+
+    }
+
+    /**
+     * Represent the packet as a string form. Needs work.
+     */
+    toString() {
+        return "RTCPHeader.toString() not implemented.";
+    }
+}
+
+/**
+ * I don't even know if the Combadges use RTCP but we might as well start stubbing for it.
+ * 
+ * Header (8 bytes)
+ * 
+ */
+class RTCPPacket {
+    constructor(header, payload = undefined) {
+        this.header = header;
+        this._payload = payload;
+    }
+
+    /**
+     * Takes a dgram as a Buffer, and decodes it into a structured object
+     * representing the RTP packet (including Header) of the packet sent by the badge.
+     * 
+     * Inspired by Array.from().
+     */
+    static from(packet) {
+        var header = RTCPHeader.from(packet);
+        var payload = packet.slice(header.payloadSize * -1);
+        return new RTCPPacket(header, payload);
+    }
+
+    /**
+     * Return the packet, ready to send.
+     */
+    toBuffer() {
+
+    }
+
+    /**
+     * Represent the packet as a string form. Needs work.
+     */
+    toString() {
+        var headerString = this.header.toString();
+
+        return headerString, "RTCPPacket.toString() not implemented.";
+    }
+}
+
+/**
  * Should provide a source and sink for RTP Packets. For now, hardcode to the correct values for Combadge audio.
  * 
  * Down the line, we should generalise this to allow the library to be reused elsewhere -
@@ -288,15 +364,26 @@ class RTPServer {
             this._consumer = consumer;
         }
 
-        this.udpServer = dgram.createSocket('udp4');
-        this.udpServer.bind(portNumber, listenAddress)
-        this.udpServer.on('listening', () => {
-            const address = this.udpServer.address();
+        this.rtpSocket = dgram.createSocket('udp4');
+        this.rtpSocket.bind(portNumber, listenAddress)
+        this.rtpSocket.on('listening', () => {
+            const address = this.rtpSocket.address();
             console.log(`RTP Server spawned at ${address.address}:${address.port}`);
         })
-        this.udpServer.on('message', (message, clientInfo) => {  
+        this.rtpSocket.on('message', (message, clientInfo) => {  
             var packet = RTPPacket.from(message);
             this.receivePacket(packet);
+        })
+
+        this.rtcpSocket = dgram.createSocket('udp4');
+        this.rtcpSocket.bind(portNumber++, listenAddress)
+        this.rtcpSocket.on('listening', () => {
+            const address = this.rtcpSocket.address();
+            console.log(`RTP Server spawned at ${address.address}:${address.port}`);
+        })
+        this.rtcpSocket.on('message', (message, clientInfo) => {  
+            var packet = RTPPacket.from(message);
+            console.log(packet);
         })
 
         /*
