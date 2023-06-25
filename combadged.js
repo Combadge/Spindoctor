@@ -26,7 +26,7 @@
 import dgram from 'dgram';
 import { CombadgePacket, Combadge } from './Libraries/ecma-cccp/index.mjs';
 import { Agent } from './Libraries/robin-agent/index.mjs';
-import { RTPHeader, RTPPacket } from './Libraries/ecma-rtp/index.mjs';
+import { RTPServer } from './Libraries/ecma-rtp/index.mjs';
 import express from 'express';
 
 
@@ -35,7 +35,7 @@ const apiPort = 1031; // Canonically the earliest appearance of combadges is Dis
 const updatePort = 5555;
 const controlPort = 5002;
 const rtpPortRangeStart = 5300; // Start here, go up.
-const rtpPoolInit = 5; // Init this many agent threads to start.
+const rtpPoolInit = 10; // Init this many agent threads to start.
 const rtpPortRangeEnd = 5400 // Absolute cap of rtp, 
 
 
@@ -47,27 +47,12 @@ class AgentManager {
     }
 
     createAgent (rtpPortNumber) {
-        var agent = new Agent;
+        var agent = new Agent();
+        var rtpServer = new RTPServer(netAddress, rtpPortNumber, agent.recieveSamples);
+        rtpServer.consumer = agent;
+        rtpServer.registerRemote("address/port object goes here")
+        agent.audioResponder = rtpServer.queueAudio;
         this._FreeAgents[rtpPortNumber] = agent;
-        var rtpPort;
-        rtpPort = dgram.createSocket('udp4');
-        rtpPort.bind(rtpPortNumber, netAddress)
-        rtpPort.on('listening', () => {
-            const address = rtpPort.address();
-            console.log(`Agent worker spawned at ${address.address}:${address.port}`);
-            // Having written this, I think this handler stuff needs to be moved to the RT library.
-            agent.audioResponder = function (audioBuffer) {
-                var rtpPayload = magicTranscode(audioBuffer);
-                var rtpHeader = new RTPHeader(rtpPayload.length);
-                var rtpPacket = new RTPPacket(rtpHeader, rtpPayload);
-                
-                return rtpPort.send(packet);
-            };
-        });
-        rtpPort.on('message', (message, clientInfo) => {  
-            var rtpPacket = RTPPacket.from(message);
-            agent.receiveSamples(rtpPacket.payload);
-        });
     }
 
     getSpecificAgent (agentPort) {
@@ -120,10 +105,10 @@ const Manager = new AgentManager;
 
 // Populate Manager with agents.
 
-for (let rtpPort = rtpPortRangeStart; rtpPort < (rtpPortRangeStart + rtpPoolInit); rtpPort++) {
+for (let rtpPort = rtpPortRangeStart; rtpPort < (rtpPortRangeStart + rtpPoolInit); rtpPort += 2) {
     console.log(`Spawning agent at port ${rtpPort}`)
     Manager.createAgent(rtpPort);
-}   
+}
 
 /**
  * Handle the command and control protocol. Detect new badges to create Objects for

@@ -18,7 +18,7 @@
 
 const Transports = ["TCP", "UDP"];
 
-const Protocols = [ "VCC", "VUPD", "VCONF", "RTP", "SIP", "HTTP", "HTTPS", "RTCP"];
+const Protocols = [ "VCC", "VUPD", "VCONF", "RTP", "RTCP", "SIP", "HTTP", "HTTPS"];
 
 
 /**
