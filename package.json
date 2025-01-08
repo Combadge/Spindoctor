@@ -33,7 +33,7 @@
     "@combadge/ecma-tonegenerator": "^1.0.4",
     "express": "^4.18.2",
     "node-vad": "git://github.com/jobsonjuniortecnorise/node-vad",
-    "stt": "^1.4.0",
+    "nodejs-whisper": "^0.2.3",
     "wav": "^1.0.2",
     "wave-resampler": "^1.0.0"
   }
