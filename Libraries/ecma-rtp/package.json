@@ -1,5 +1,5 @@
 {
-    "name": "ecma-rtp",
+    "name": "@combadge/ecma-rtp",
     "version": "0.0.5",
     "type": "module",
     "description": "An RTP Library for Spin Doctor, written in ECMAScript",
